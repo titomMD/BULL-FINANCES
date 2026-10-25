@@ -9,6 +9,7 @@ import { toUserMessage } from '../../lib/errors'
 import { formatMoney, parseMoneyInput } from '../../lib/money'
 import { setStatementPayment } from '../../services/debts'
 import type { DebtStatement } from '../../types/domain'
+import { CardArt } from '../../components/debts/CardArt'
 import { StoredFile } from '../../components/debts/StoredFile'
 import { MoneyInput } from '../../components/forms/MoneyInput'
 import { Button, ButtonLink } from '../../components/ui/Button'
@@ -201,6 +202,7 @@ export function AccountPage() {
         <EmptyState title="No encontramos esa tarjeta">Puede que el enlace esté mal.</EmptyState>
       ) : (
         <div className="flex flex-col gap-5">
+          {!account.imagePath && <CardArt name={account.name} last4={account.last4} />}
           {account.imagePath && (
             <StoredFile
               path={account.imagePath}
