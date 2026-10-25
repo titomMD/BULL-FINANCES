@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useParams } from 'react-router'
+import { useParams, useSearchParams } from 'react-router'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useHousehold } from '../../app/household-context'
@@ -11,6 +11,7 @@ import { invalidateData } from '../../hooks/useResource'
 import { todayBogota } from '../../lib/dates'
 import { toUserMessage } from '../../lib/errors'
 import { formatMoneyInput, parseMoneyInput } from '../../lib/money'
+import { parsePrefill } from '../../lib/prefill'
 import { parseUsdInput } from '../../lib/usd'
 import { personalSchema, type PersonalFormValues } from '../../lib/validation/movements'
 import { createCardExpense } from '../../services/debts'
@@ -70,9 +71,27 @@ function PersonalForm({ kind, movement }: { kind: Kind; movement?: PersonalMovem
   const cards = (accounts.data ?? []).filter((card) => !card.archivedAt)
   // Un gasto con tarjeta no baja tu dinero personal: queda en esa tarjeta hasta que la pagues.
   const canUseCard = kind === 'expense' && !movement && cards.length > 0
-  const [payWith, setPayWith] = useState('')
-  const [cardCurrency, setCardCurrency] = useState<DebtCurrency>('COP')
-  const [usd, setUsd] = useState('')
+  // Un atajo del iPhone puede abrir esta pantalla con el gasto ya escrito:
+  // ?monto=45000&desc=Rappi&tarjeta=Visa&moneda=USD&fecha=2026-10-25
+  const [params] = useSearchParams()
+  const prefill = movement ? null : parsePrefill(params)
+  const [payChoice, setPayChoice] = useState<string | null>(null)
+  const matchedCard = prefill?.card
+    ? cards.find(
+        (card) =>
+          card.last4 === prefill.card ||
+          card.name.toLowerCase().includes(prefill.card.toLowerCase()) ||
+          prefill.card.toLowerCase().includes(card.name.toLowerCase()),
+      )
+    : undefined
+  const payWith = payChoice ?? matchedCard?.id ?? ''
+  const setPayWith = setPayChoice
+  const [currencyChoice, setCurrencyChoice] = useState<DebtCurrency | null>(null)
+  const cardCurrency: DebtCurrency = currencyChoice ?? prefill?.currency ?? 'COP'
+  const setCardCurrency = setCurrencyChoice
+  const [usdChoice, setUsdChoice] = useState<string | null>(null)
+  const usd = usdChoice ?? (prefill?.currency === 'USD' ? prefill.amountText : '')
+  const setUsd = setUsdChoice
   const useUsd = canUseCard && payWith !== '' && cardCurrency === 'USD'
 
   const categories = data.categories.filter(
@@ -96,7 +115,16 @@ function PersonalForm({ kind, movement }: { kind: Kind; movement?: PersonalMovem
           categoryId: movement.categoryId ?? '',
           notes: movement.notes ?? '',
         }
-      : { description: '', amount: '', date: todayBogota(), categoryId: '', notes: '' },
+      : {
+          description: prefill?.description ?? '',
+          amount:
+            prefill?.currency === 'COP' && prefill.pesos
+              ? formatMoneyInput(String(prefill.pesos))
+              : '',
+          date: prefill?.date ?? todayBogota(),
+          categoryId: '',
+          notes: '',
+        },
   })
 
   const saveCardExpense = async (values: PersonalFormValues, usdText: string | null) => {
