@@ -52,7 +52,8 @@ const copy: Record<
     amount: '¿Cuánto pagas al mes?',
     name: '¿Qué es?',
     placeholder: 'Gimnasio, gasolina, suscripción…',
-    intro: 'Un gasto que se repite cada mes. Los de tarjeta puedes agruparlos con el mismo grupo.',
+    intro:
+      'Un gasto que se repite cada mes. Las suscripciones puedes agruparlas con el mismo grupo (por ejemplo «Membresías»).',
   },
   saving: {
     title: 'Ahorro del plan',
@@ -91,8 +92,9 @@ function PlanItemForm({ kind, item }: { kind: PlanKind; item?: PlanItem }) {
           groupName: item.groupName ?? '',
           startMonth: item.startsOn?.slice(0, 7) ?? '',
           endMonth: item.endsOn?.slice(0, 7) ?? '',
+          tracked: item.tracked,
         }
-      : { name: '', amount: '', groupName: '', startMonth: '', endMonth: '' },
+      : { name: '', amount: '', groupName: '', startMonth: '', endMonth: '', tracked: false },
   })
 
   const onSubmit = handleSubmit(async (values) => {
@@ -102,6 +104,7 @@ function PlanItemForm({ kind, item }: { kind: PlanKind; item?: PlanItem }) {
       amount: parseMoneyInput(values.amount)!,
       startsOn: values.startMonth ? `${values.startMonth}-01` : null,
       endsOn: values.endMonth ? endOfMonth(`${values.endMonth}-01`) : null,
+      tracked: kind === 'expense' ? Boolean(values.tracked) : false,
     }
     try {
       if (item) await updatePlanItem(item.id, input)
@@ -152,7 +155,7 @@ function PlanItemForm({ kind, item }: { kind: PlanKind; item?: PlanItem }) {
         {kind === 'expense' && (
           <Field
             label="Grupo (opcional)"
-            hint="Por ejemplo «Tarjeta»: los gastos con el mismo grupo se suman juntos."
+            hint="Por ejemplo «Membresías»: los gastos con el mismo grupo se suman juntos."
             error={errors.groupName?.message}
           >
             {({ id, describedBy, invalid }) => (
@@ -174,6 +177,21 @@ function PlanItemForm({ kind, item }: { kind: PlanKind; item?: PlanItem }) {
               </>
             )}
           </Field>
+        )}
+        {kind === 'expense' && (
+          <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl bg-surface-2 px-3.5 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-primary">
+            <input
+              type="checkbox"
+              className="size-5 shrink-0 accent-(--color-primary)"
+              {...register('tracked')}
+            />
+            <span className="flex flex-col py-2 leading-tight">
+              <span className="font-medium">Registrar gastos de esta línea</span>
+              <span className="text-sm text-fg-muted">
+                Para la gasolina: anotas cada tanqueada y se resta del tope del mes.
+              </span>
+            </span>
+          </label>
         )}
         <div className="grid gap-4 sm:grid-cols-2">
           <Field

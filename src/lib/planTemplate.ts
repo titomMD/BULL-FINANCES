@@ -21,8 +21,8 @@ const line = (
   ...extra,
 })
 
-const card = (name: string, amount: number) =>
-  line('expense', name, amount, { groupName: 'Tarjeta' })
+const membership = (name: string, amount: number) =>
+  line('expense', name, amount, { groupName: 'Membresías' })
 
 export const EXAMPLE_PLAN: TemplateItem[] = [
   // Fondo semestral de 12.300.000 repartido en 6 cuotas de 2.050.000 (julio a diciembre 2026).
@@ -35,15 +35,15 @@ export const EXAMPLE_PLAN: TemplateItem[] = [
   line('income', 'Abuelo (bolsillos)', 550_000),
   line('income', 'Restante del mes anterior', 200_000),
   line('expense', 'Gimnasio', 120_000),
-  line('expense', 'Gasolina', 650_000),
-  card('iCloud', 21_000),
-  card('Cuota de manejo', 18_000),
-  card('Ahorros', 15_000),
-  card('Google', 31_000),
-  card('Negocios', 31_000),
-  card('Visa', 44_000),
-  card('Adobe', 33_000),
-  card('Verificado Instagram', 34_000),
-  card('Claude', 66_000),
-  line('saving', 'Ahorro mensual', 1_200_000),
+  line('expense', 'Gasolina', 650_000, { tracked: true }),
+  membership('iCloud', 21_000),
+  membership('Cuota de manejo', 18_000),
+  membership('Ahorros', 15_000),
+  membership('Google', 31_000),
+  membership('Negocios', 31_000),
+  membership('Visa', 44_000),
+  membership('Adobe', 33_000),
+  membership('Verificado Instagram', 34_000),
+  membership('Claude', 66_000),
+  line('saving', 'Pago de tarjetas y deudas', 1_200_000),
 ]

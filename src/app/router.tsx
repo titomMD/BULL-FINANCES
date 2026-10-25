@@ -17,6 +17,10 @@ import { BudgetsPage } from '../pages/Budgets/BudgetsPage'
 import { PersonalPage } from '../pages/Personal/PersonalPage'
 import { PersonalFormPage } from '../pages/Personal/PersonalFormPage'
 import { PlanPage } from '../pages/Plan/PlanPage'
+import { DebtsPage } from '../pages/Debts/DebtsPage'
+import { AccountPage } from '../pages/Debts/AccountPage'
+import { AccountFormPage } from '../pages/Debts/AccountFormPage'
+import { StatementFormPage } from '../pages/Debts/StatementFormPage'
 import { PlanItemFormPage } from '../pages/Plan/PlanItemFormPage'
 import { RecurringPage } from '../pages/Recurring/RecurringPage'
 import { RecurringFormPage } from '../pages/Recurring/RecurringFormPage'
@@ -84,6 +88,12 @@ export const router = createBrowserRouter([
               { path: 'plan', element: <PlanPage /> },
               { path: 'plan/nuevo/:kind', element: <PlanItemFormPage /> },
               { path: 'plan/:id', element: <PlanItemFormPage /> },
+              { path: 'tarjetas', element: <DebtsPage /> },
+              { path: 'tarjetas/nueva', element: <AccountFormPage /> },
+              { path: 'tarjetas/:id', element: <AccountPage /> },
+              { path: 'tarjetas/:id/editar', element: <AccountFormPage /> },
+              { path: 'tarjetas/:id/extractos/nuevo', element: <StatementFormPage /> },
+              { path: 'tarjetas/:id/extractos/:statementId', element: <StatementFormPage /> },
               { path: 'personal', element: <PersonalPage /> },
               { path: 'personal/ingresos/nuevo', element: <PersonalFormPage kind="income" /> },
               { path: 'personal/gastos/nuevo', element: <PersonalFormPage kind="expense" /> },

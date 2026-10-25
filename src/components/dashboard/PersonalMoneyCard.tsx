@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { Link } from 'react-router'
 import { CaretRightIcon, LockSimpleIcon } from '@phosphor-icons/react'
 import { usePersonalMoney } from '../../hooks/usePersonalMoney'
+import { usePlanSync } from '../../hooks/usePlanSync'
 import { personalSummary } from '../../lib/calculations/personal'
 import { endOfMonth, startOfMonth, todayBogota } from '../../lib/dates'
 import { formatMoney, formatSigned } from '../../lib/money'
@@ -9,6 +10,7 @@ import { Skeleton } from '../ui/States'
 
 /** Inicio: acceso a tu dinero personal (privado y aparte del saldo del hogar). */
 export function PersonalMoneyCard() {
+  usePlanSync()
   const personal = usePersonalMoney()
   const today = todayBogota()
 

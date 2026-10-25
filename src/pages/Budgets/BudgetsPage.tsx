@@ -9,6 +9,7 @@ import { toUserMessage } from '../../lib/errors'
 import type { BudgetPeriod } from '../../types/domain'
 import { BudgetBar, BudgetIcon, BudgetStatus } from '../../components/budgets/BudgetParts'
 import { kindLabel, useBudgetName } from '../../components/budgets/budgetLabels'
+import { PlanBuckets } from '../../components/budgets/PlanBuckets'
 import { ButtonLink } from '../../components/ui/Button'
 import { Page, PageHeader } from '../../components/ui/PageHeader'
 import { EmptyState, ErrorState, LedgerSkeleton } from '../../components/ui/States'
@@ -90,6 +91,9 @@ export function BudgetsPage() {
           ) : undefined
         }
       />
+      <div className="mb-8">
+        <PlanBuckets />
+      </div>
       {budgets.loading ? (
         <LedgerSkeleton days={1} />
       ) : budgets.error && !budgets.data ? (
@@ -97,7 +101,7 @@ export function BudgetsPage() {
       ) : !hasBudgets ? (
         <EmptyState
           icon={<WalletIcon />}
-          title="Aún no tienes presupuestos"
+          title="Aún no tienes presupuestos propios"
           action={<ButtonLink to="/presupuestos/nuevo">Crear el primero</ButtonLink>}
         >
           Ponte un tope para una categoría (Comida $400.000 al mes), para todo lo que gastas, o uno

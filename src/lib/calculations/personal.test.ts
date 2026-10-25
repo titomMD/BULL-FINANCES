@@ -22,6 +22,7 @@ const movement = (
     categoryId: null,
     notes: null,
     status: 'active',
+    planMonth: null,
     createdBy: 'a',
     createdAt: `2026-10-01T00:00:${String(seq).padStart(2, '0')}Z`,
     updatedBy: 'a',

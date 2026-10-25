@@ -3,6 +3,7 @@ import { Link } from 'react-router'
 import { LockSimpleIcon, MinusIcon, PlusIcon } from '@phosphor-icons/react'
 import { useHousehold } from '../../app/household-context'
 import { usePersonalMoney } from '../../hooks/usePersonalMoney'
+import { usePlanSync } from '../../hooks/usePlanSync'
 import { personalDays, personalSummary } from '../../lib/calculations/personal'
 import {
   endOfMonth,
@@ -71,6 +72,7 @@ function PersonalRow({ movement }: { movement: PersonalMovement }) {
  * disponible, de lo que queda y de los reportes.
  */
 export function PersonalPage() {
+  usePlanSync()
   const personal = usePersonalMoney()
   const today = todayBogota()
 

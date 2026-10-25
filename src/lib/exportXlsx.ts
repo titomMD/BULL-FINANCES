@@ -1,7 +1,14 @@
 // Exportación a Excel (.xlsx). La parte que arma las hojas es pura (se prueba con vitest); la
 // descarga carga la librería solo cuando se pide (un trozo aparte, no pesa en la pantalla de inicio).
 
-import type { Category, PersonalMovement, PlanItem } from '../types/domain'
+import type {
+  Category,
+  DebtAccount,
+  DebtStatement,
+  PersonalMovement,
+  PlanEntry,
+  PlanItem,
+} from '../types/domain'
 import { planSummary } from './calculations/plan'
 import type { Cell, Table } from './export'
 
@@ -72,6 +79,10 @@ export interface XlsxInput {
   categories: Category[]
   /** Mes del resumen del plan, 'YYYY-MM'. */
   month: string
+  /** Tanqueadas y otros gastos registrados en el plan. */
+  entries?: PlanEntry[]
+  accounts?: DebtAccount[]
+  statements?: DebtStatement[]
 }
 
 export function buildXlsxSheets(input: XlsxInput): SheetModel[] {
@@ -104,12 +115,61 @@ export function buildXlsxSheets(input: XlsxInput): SheetModel[] {
     ]),
   }
 
+  const itemName = (id: string) => input.plan.find((item) => item.id === id)?.name ?? ''
+  const accountName = (id: string) => input.accounts?.find((a) => a.id === id)?.name ?? ''
+
+  const entries: Table = {
+    headers: ['fecha', 'linea', 'monto', 'nota'],
+    rows: (input.entries ?? []).map((e) => [e.date, itemName(e.planItemId), e.amount, e.note]),
+  }
+  const statements: Table = {
+    headers: [
+      'tarjeta',
+      'corte',
+      'limite_pago',
+      'mes_de_pago',
+      'total',
+      'minimo',
+      'pagado',
+      'nota',
+    ],
+    rows: (input.statements ?? []).map((s) => [
+      accountName(s.accountId),
+      s.statementDate,
+      s.dueDate ?? '',
+      s.payMonth,
+      s.totalDue,
+      s.minimumDue,
+      s.paidAmount,
+      s.notes,
+    ]),
+  }
+  const statementLines: Table = {
+    headers: ['tarjeta', 'corte', 'fecha', 'detalle', 'valor'],
+    rows: (input.statements ?? []).flatMap((s) =>
+      s.lines.map((line) => [
+        accountName(s.accountId),
+        s.statementDate,
+        line.date,
+        line.detail,
+        line.amount,
+      ]),
+    ),
+  }
+
   const household = (filename: string, name: string) =>
     input.tables[filename] ? [fromTable(name, input.tables[filename])] : []
 
   return [
     planMonthSheet(input.plan, input.month),
     fromTable('Plan (líneas)', planLines),
+    ...(input.entries?.length ? [fromTable('Tanqueadas', entries)] : []),
+    ...(input.statements?.length
+      ? [
+          fromTable('Extractos de tarjetas', statements),
+          fromTable('Movimientos de extractos', statementLines),
+        ]
+      : []),
     fromTable('Dinero personal', personal),
     ...household('gastos.csv', 'Gastos del hogar'),
     ...household('ingresos.csv', 'Ingresos del hogar'),

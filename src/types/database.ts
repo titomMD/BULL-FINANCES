@@ -753,6 +753,7 @@ export type Database = {
           id: string
           kind: string
           notes: string | null
+          plan_month: string | null
           status: string
           updated_at: string
           updated_by: string | null
@@ -772,6 +773,7 @@ export type Database = {
           id?: string
           kind: string
           notes?: string | null
+          plan_month?: string | null
           status?: string
           updated_at?: string
           updated_by?: string | null
@@ -791,6 +793,7 @@ export type Database = {
           id?: string
           kind?: string
           notes?: string | null
+          plan_month?: string | null
           status?: string
           updated_at?: string
           updated_by?: string | null
@@ -822,6 +825,291 @@ export type Database = {
           },
         ]
       }
+      debt_accounts: {
+        Row: {
+          archived_at: string | null
+          cut_day: number | null
+          due_day: number | null
+          household_id: string
+          id: string
+          image_path: string | null
+          last4: string | null
+          name: string
+          notes: string | null
+          user_id: string
+          created_at: string
+          created_by: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          archived_at?: string | null
+          cut_day?: number | null
+          due_day?: number | null
+          household_id: string
+          id?: string
+          image_path?: string | null
+          last4?: string | null
+          name: string
+          notes?: string | null
+          user_id?: string
+          created_at?: string
+          created_by?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          archived_at?: string | null
+          cut_day?: number | null
+          due_day?: number | null
+          household_id?: string
+          id?: string
+          image_path?: string | null
+          last4?: string | null
+          name?: string
+          notes?: string | null
+          user_id?: string
+          created_at?: string
+          created_by?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'debt_accounts_household_id_fkey'
+            columns: ['household_id']
+            isOneToOne: false
+            referencedRelation: 'households'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'debt_accounts_household_id_user_id_fkey'
+            columns: ['household_id', 'user_id']
+            isOneToOne: false
+            referencedRelation: 'household_members'
+            referencedColumns: ['household_id', 'user_id']
+          },
+        ]
+      }
+      debt_statements: {
+        Row: {
+          account_id: string
+          due_date: string | null
+          file_name: string | null
+          file_path: string | null
+          household_id: string
+          id: string
+          interest: number | null
+          lines: Json
+          minimum_due: number
+          notes: string | null
+          paid_amount: number
+          paid_on: string | null
+          pay_month: string
+          previous_balance: number | null
+          purchases: number | null
+          statement_date: string
+          total_due: number
+          user_id: string
+          created_at: string
+          created_by: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          account_id: string
+          due_date?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          household_id: string
+          id?: string
+          interest?: number | null
+          lines?: Json
+          minimum_due?: number
+          notes?: string | null
+          paid_amount?: number
+          paid_on?: string | null
+          pay_month: string
+          previous_balance?: number | null
+          purchases?: number | null
+          statement_date: string
+          total_due?: number
+          user_id?: string
+          created_at?: string
+          created_by?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          account_id?: string
+          due_date?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          household_id?: string
+          id?: string
+          interest?: number | null
+          lines?: Json
+          minimum_due?: number
+          notes?: string | null
+          paid_amount?: number
+          paid_on?: string | null
+          pay_month?: string
+          previous_balance?: number | null
+          purchases?: number | null
+          statement_date?: string
+          total_due?: number
+          user_id?: string
+          created_at?: string
+          created_by?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'debt_statements_household_id_fkey'
+            columns: ['household_id']
+            isOneToOne: false
+            referencedRelation: 'households'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'debt_statements_household_id_user_id_fkey'
+            columns: ['household_id', 'user_id']
+            isOneToOne: false
+            referencedRelation: 'household_members'
+            referencedColumns: ['household_id', 'user_id']
+          },
+          {
+            foreignKeyName: 'debt_statements_account_id_user_id_fkey'
+            columns: ['account_id', 'user_id']
+            isOneToOne: false
+            referencedRelation: 'debt_accounts'
+            referencedColumns: ['id', 'user_id']
+          },
+        ]
+      }
+      plan_checks: {
+        Row: {
+          household_id: string
+          id: string
+          month: string
+          plan_item_id: string
+          user_id: string
+          created_at: string
+          created_by: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          household_id: string
+          id?: string
+          month: string
+          plan_item_id: string
+          user_id?: string
+          created_at?: string
+          created_by?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          household_id?: string
+          id?: string
+          month?: string
+          plan_item_id?: string
+          user_id?: string
+          created_at?: string
+          created_by?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'plan_checks_household_id_fkey'
+            columns: ['household_id']
+            isOneToOne: false
+            referencedRelation: 'households'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'plan_checks_household_id_user_id_fkey'
+            columns: ['household_id', 'user_id']
+            isOneToOne: false
+            referencedRelation: 'household_members'
+            referencedColumns: ['household_id', 'user_id']
+          },
+          {
+            foreignKeyName: 'plan_checks_plan_item_id_fkey'
+            columns: ['plan_item_id']
+            isOneToOne: false
+            referencedRelation: 'plan_items'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      plan_entries: {
+        Row: {
+          amount: number
+          entry_date: string
+          household_id: string
+          id: string
+          note: string | null
+          plan_item_id: string
+          user_id: string
+          created_at: string
+          created_by: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          amount: number
+          entry_date?: string
+          household_id: string
+          id?: string
+          note?: string | null
+          plan_item_id: string
+          user_id?: string
+          created_at?: string
+          created_by?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          amount?: number
+          entry_date?: string
+          household_id?: string
+          id?: string
+          note?: string | null
+          plan_item_id?: string
+          user_id?: string
+          created_at?: string
+          created_by?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'plan_entries_household_id_fkey'
+            columns: ['household_id']
+            isOneToOne: false
+            referencedRelation: 'households'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'plan_entries_household_id_user_id_fkey'
+            columns: ['household_id', 'user_id']
+            isOneToOne: false
+            referencedRelation: 'household_members'
+            referencedColumns: ['household_id', 'user_id']
+          },
+          {
+            foreignKeyName: 'plan_entries_plan_item_id_fkey'
+            columns: ['plan_item_id']
+            isOneToOne: false
+            referencedRelation: 'plan_items'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       plan_items: {
         Row: {
           amount: number
@@ -836,6 +1124,7 @@ export type Database = {
           name: string
           sort_order: number
           starts_on: string | null
+          tracked: boolean
           updated_at: string
           updated_by: string | null
           user_id: string
@@ -853,6 +1142,7 @@ export type Database = {
           name: string
           sort_order?: number
           starts_on?: string | null
+          tracked?: boolean
           updated_at?: string
           updated_by?: string | null
           user_id?: string
@@ -870,6 +1160,7 @@ export type Database = {
           name?: string
           sort_order?: number
           starts_on?: string | null
+          tracked?: boolean
           updated_at?: string
           updated_by?: string | null
           user_id?: string

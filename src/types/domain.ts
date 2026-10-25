@@ -163,6 +163,8 @@ export interface PersonalMovement extends Audit {
   categoryId: string | null
   notes: string | null
   status: RecordStatus
+  /** 'YYYY-MM' si es el ingreso «Dinero mío» que el plan genera solo; null en los demás. */
+  planMonth: string | null
 }
 
 /** División pedida al crear/editar: participantes (iguales) o porcentajes en puntos básicos. */
@@ -184,4 +186,63 @@ export interface PlanItem {
   startsOn: string | null
   endsOn: string | null
   sortOrder: number
+  /** Lleva registros de gasto del mes (p. ej. las tanqueadas de la gasolina). */
+  tracked: boolean
+}
+
+/** «Ya lo pagué este mes»: una marca por línea y mes. */
+export interface PlanCheck {
+  id: string
+  planItemId: string
+  /** 'YYYY-MM' */
+  month: string
+}
+
+/** Un gasto registrado contra una línea del plan (una tanqueada, por ejemplo). */
+export interface PlanEntry {
+  id: string
+  planItemId: string
+  date: string
+  amount: number
+  note: string | null
+}
+
+/** Tarjeta de crédito o deuda. Solo se guardan los últimos 4 dígitos. */
+export interface DebtAccount {
+  id: string
+  name: string
+  last4: string | null
+  cutDay: number | null
+  dueDay: number | null
+  notes: string | null
+  /** Ruta de la imagen de la tarjeta en el almacenamiento privado. */
+  imagePath: string | null
+  archivedAt: string | null
+}
+
+/** Movimiento copiado de un extracto (solo para consultar). */
+export interface StatementLine {
+  date: string
+  detail: string
+  amount: number
+}
+
+export interface DebtStatement {
+  id: string
+  accountId: string
+  statementDate: string
+  dueDate: string | null
+  /** 'YYYY-MM': mes del plan en el que se paga. */
+  payMonth: string
+  totalDue: number
+  minimumDue: number
+  previousBalance: number | null
+  interest: number | null
+  purchases: number | null
+  paidAmount: number
+  paidOn: string | null
+  notes: string | null
+  lines: StatementLine[]
+  filePath: string | null
+  fileName: string | null
 }

@@ -6,7 +6,7 @@ import type { PersonalMovement, RecordStatus } from '../types/domain'
 // Dinero personal. RLS solo deja ver y tocar los movimientos de quien está conectado.
 
 const PERSONAL_COLUMNS =
-  'id, kind, description, amount, currency, date, category_id, notes, status, created_by, created_at, updated_by, updated_at'
+  'id, kind, description, amount, currency, date, category_id, notes, status, plan_month, created_by, created_at, updated_by, updated_at'
 
 /** Tus movimientos personales (activos y anulados), del más reciente al más antiguo. */
 export async function fetchMyPersonalMovements(householdId: string): Promise<PersonalMovement[]> {
@@ -31,6 +31,7 @@ export async function fetchMyPersonalMovements(householdId: string): Promise<Per
     categoryId: row.category_id,
     notes: row.notes,
     status: row.status as RecordStatus,
+    planMonth: row.plan_month,
     createdBy: row.created_by,
     createdAt: row.created_at,
     updatedBy: row.updated_by,
@@ -82,4 +83,38 @@ export async function voidPersonalMovement(movementId: string): Promise<void> {
   assertOk(
     await supabase.from('personal_movements').update({ status: 'voided' }).eq('id', movementId),
   )
+}
+
+/**
+ * «Dinero mío» del plan como ingreso personal del mes: crea la fila si no existe, la actualiza si
+ * el monto cambió y la anula si el plan ya no deja nada. Un solo ingreso activo por mes (lo exige
+ * un índice único); si dos pantallas lo intentan a la vez, la segunda simplemente no hace nada.
+ */
+export async function syncPlanIncome(
+  householdId: string,
+  month: string,
+  amount: number,
+  existing: { id: string; amount: number } | undefined,
+  today: string,
+): Promise<boolean> {
+  if (existing) {
+    if (amount >= 1 && existing.amount === amount) return false
+    const change = amount >= 1 ? { amount } : { status: 'voided' as const }
+    assertOk(await supabase.from('personal_movements').update(change).eq('id', existing.id))
+    return true
+  }
+  if (amount < 1) return false
+  const result = await supabase.from('personal_movements').insert({
+    household_id: householdId,
+    kind: 'income',
+    description: 'Dinero mío (plan del mes)',
+    amount,
+    date: today.slice(0, 7) === month ? today : `${month}-01`,
+    plan_month: month,
+  })
+  if (result.error) {
+    if (result.error.code === '23505') return false
+    throw result.error
+  }
+  return true
 }

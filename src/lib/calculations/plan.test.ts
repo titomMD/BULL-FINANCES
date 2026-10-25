@@ -17,6 +17,7 @@ const item = (over: Partial<PlanItem> & Pick<PlanItem, 'kind' | 'name' | 'amount
   startsOn: null,
   endsOn: null,
   sortOrder: seq,
+  tracked: false,
   ...over,
 })
 

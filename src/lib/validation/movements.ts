@@ -158,6 +158,7 @@ export const planItemSchema = z
     groupName: z.string().trim().max(60, 'Máximo 60 caracteres.'),
     startMonth: monthField,
     endMonth: monthField,
+    tracked: z.boolean().optional(),
   })
   .refine((value) => !value.startMonth || !value.endMonth || value.endMonth >= value.startMonth, {
     path: ['endMonth'],

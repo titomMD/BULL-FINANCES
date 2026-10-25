@@ -32,6 +32,11 @@
   el hook `public.hook_before_user_created` solo rechaza un código de invitación escrito que no
   sea válido. Sin código, `/bienvenida` crea el hogar personal «Mis finanzas». Plan del mes
   (`plan_items`, `calculations/plan.ts`, `/plan`): privado por RLS, fuera de los cálculos del hogar.
+  v4 (2026-10-25): pagos marcados (`plan_checks`), tanqueadas (`plan_entries`, líneas `tracked`),
+  tarjetas/deudas y extractos (`debt_accounts`, `debt_statements`, bucket privado `freyapp-files`),
+  cálculo en `calculations/planMonth.ts`; «Dinero mío» pasa solo a `personal_movements`
+  (`plan_month`, índice único por mes activo) vía `hooks/usePlanSync.ts`; lo que se pasa de un tope
+  (gasolina, pagos de tarjeta) se descuenta de «Dinero mío». Rutas `/tarjetas/...`.
   Excel: `lib/exportXlsx.ts` con `write-excel-file/universal` (sin Web Workers: la CSP solo permite
   scripts propios).
 - Ninguna service key / secret key / password de Postgres en el frontend ni en variables

@@ -4,27 +4,26 @@ import {
   CaretLeftIcon,
   CaretRightIcon,
   CalendarCheckIcon,
+  CreditCardIcon,
   LockSimpleIcon,
   PlusIcon,
 } from '@phosphor-icons/react'
 import { useHousehold } from '../../app/household-context'
 import { usePersonalMoney } from '../../hooks/usePersonalMoney'
-import { usePlan } from '../../hooks/usePlan'
+import { useDebtAccounts, useDebtStatements } from '../../hooks/useDebts'
+import { usePlan, usePlanChecks, usePlanEntries } from '../../hooks/usePlan'
+import { usePlanSync } from '../../hooks/usePlanSync'
 import { invalidateData } from '../../hooks/useResource'
-import {
-  freeLeft,
-  installmentOf,
-  monthOf,
-  planSummary,
-  shiftMonth,
-} from '../../lib/calculations/plan'
+import { freeLeft, installmentOf, monthOf, shiftMonth } from '../../lib/calculations/plan'
+import { monthProgress } from '../../lib/calculations/planMonth'
 import { personalSummary } from '../../lib/calculations/personal'
 import { endOfMonth, formatMonthName, startOfMonth, todayBogota } from '../../lib/dates'
 import { toUserMessage } from '../../lib/errors'
 import { formatMoney, formatSigned } from '../../lib/money'
 import { EXAMPLE_PLAN } from '../../lib/planTemplate'
-import { createPlanItems } from '../../services/plan'
+import { createPlanItems, renamePlanGroup, setTracked } from '../../services/plan'
 import type { PlanItem, PlanKind } from '../../types/domain'
+import { CheckRow, TrackedRow } from '../../components/plan/FixedRow'
 import { Button, ButtonLink } from '../../components/ui/Button'
 import { Page, PageHeader } from '../../components/ui/PageHeader'
 import { EmptyState, ErrorState, LedgerSkeleton } from '../../components/ui/States'
@@ -96,23 +95,54 @@ function Section({
  */
 export function PlanPage() {
   const { household } = useHousehold()
+  usePlanSync()
   const plan = usePlan()
+  const checks = usePlanChecks()
+  const entries = usePlanEntries()
+  const statements = useDebtStatements()
+  const accounts = useDebtAccounts()
   const personal = usePersonalMoney()
   const toast = useToast()
   const today = todayBogota()
   const [month, setMonth] = useState(monthOf(today))
   const [loadingExample, setLoadingExample] = useState(false)
 
-  const summary = useMemo(() => planSummary(plan.data ?? [], month), [plan.data, month])
+  const progress = useMemo(
+    () =>
+      monthProgress(
+        plan.data ?? [],
+        checks.data ?? [],
+        entries.data ?? [],
+        statements.data ?? [],
+        month,
+      ),
+    [plan.data, checks.data, entries.data, statements.data, month],
+  )
+  const summary = progress.summary
   const monthDay = `${month}-01`
   const left = useMemo(() => {
     if (month !== monthOf(today)) return null
-    const personalMonth = personalSummary(personal.data ?? [], {
-      from: startOfMonth(monthDay),
-      to: endOfMonth(monthDay),
-    })
-    return freeLeft(summary.free, personalMonth)
-  }, [personal.data, summary.free, month, monthDay, today])
+    // El ingreso que el plan genera solo ya es «Dinero mío»: no se suma dos veces.
+    const personalMonth = personalSummary(
+      (personal.data ?? []).filter((movement) => !movement.planMonth),
+      { from: startOfMonth(monthDay), to: endOfMonth(monthDay) },
+    )
+    return freeLeft(progress.money, personalMonth)
+  }, [personal.data, progress.money, month, monthDay, today])
+
+  const hasOldGroup = (plan.data ?? []).some((item) => item.groupName === 'Tarjeta')
+  const gasoline = (plan.data ?? []).find(
+    (item) => item.kind === 'expense' && !item.tracked && /gasolina/i.test(item.name),
+  )
+  const applyFix = async (action: () => Promise<void>, done: string) => {
+    try {
+      await action()
+      invalidateData()
+      toast.show(done)
+    } catch (error) {
+      toast.show(toUserMessage(error, 'No pudimos hacer el cambio.'), 'error')
+    }
+  }
 
   const loadExample = async () => {
     setLoadingExample(true)
@@ -127,7 +157,7 @@ export function PlanPage() {
     }
   }
 
-  const negative = summary.free < 0
+  const negative = progress.money < 0
 
   return (
     <Page>
@@ -180,18 +210,27 @@ export function PlanPage() {
           <section aria-labelledby="plan-libre" className="flex flex-col gap-2">
             <h2 id="plan-libre" className="text-fg-muted">
               {negative ? 'El plan no alcanza: te faltan' : 'Dinero mío este mes'}
-              <span className="sr-only"> {formatMoney(Math.abs(summary.free))}</span>
+              <span className="sr-only"> {formatMoney(Math.abs(progress.money))}</span>
             </h2>
             <p
               aria-hidden="true"
               className={`tabular text-[clamp(2rem,10vw,3rem)] leading-tight font-semibold tracking-tight [overflow-wrap:anywhere] ${negative ? 'text-negative' : ''}`}
             >
-              {negative ? formatSigned(summary.free) : formatMoney(summary.free)}
+              {negative ? formatSigned(progress.money) : formatMoney(progress.money)}
             </p>
             <p data-money className="text-sm text-fg-muted">
               {formatMoney(summary.totalIncome)} de ingresos − {formatMoney(summary.totalExpenses)}{' '}
-              de gastos fijos − {formatMoney(summary.totalSavings)} de ahorro.
+              de gastos fijos − {formatMoney(summary.totalSavings)} para tarjetas y deudas
+              {progress.overspend > 0 && (
+                <> − {formatMoney(progress.overspend)} que te pasaste de los topes</>
+              )}
+              .
             </p>
+            {month === monthOf(today) && (
+              <p className="text-sm text-fg-muted">
+                Este valor pasa solo a tu dinero personal como ingreso del mes.
+              </p>
+            )}
             {left !== null && (
               <p data-money className="text-sm text-fg-muted">
                 Después de lo que ya gastaste de tu dinero personal este mes, te quedan{' '}
@@ -223,35 +262,102 @@ export function PlanPage() {
             </ul>
           </Section>
 
+          {(hasOldGroup || gasoline) && (
+            <section
+              aria-label="Ajustes sugeridos"
+              className="flex flex-col gap-2 rounded-2xl border border-line bg-surface px-4 py-3"
+            >
+              <h2 className="text-sm font-semibold">Ajustes sugeridos para tu plan</h2>
+              {hasOldGroup && (
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-sm text-fg-muted">
+                    Tus suscripciones están en el grupo «Tarjeta».
+                  </p>
+                  <Button
+                    variant="secondary"
+                    onClick={() =>
+                      applyFix(
+                        () => renamePlanGroup(household.id, 'Tarjeta', 'Membresías'),
+                        'Ahora se llama «Membresías»',
+                      )
+                    }
+                  >
+                    Llamarlo «Membresías»
+                  </Button>
+                </div>
+              )}
+              {gasoline && (
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-sm text-fg-muted">
+                    Registra las tanqueadas de «{gasoline.name}» y se van restando.
+                  </p>
+                  <Button
+                    variant="secondary"
+                    onClick={() =>
+                      applyFix(() => setTracked(gasoline.id, true), 'Listo: ya puedes registrar')
+                    }
+                  >
+                    Llevar tanqueadas
+                  </Button>
+                </div>
+              )}
+            </section>
+          )}
+
           <Section
             title="Gastos fijos"
             total={summary.totalExpenses}
             kind="expense"
-            empty={summary.expenseGroups.length === 0}
+            empty={progress.groups.length === 0}
           >
+            {progress.groups.length > 0 && (
+              <p data-money className="pb-1 text-sm text-fg-muted">
+                Pagado{' '}
+                <span className="tabular font-semibold text-fg">
+                  {formatMoney(progress.fixedPaid)}
+                </span>{' '}
+                de {formatMoney(progress.fixedTotal)}. Marca cada uno cuando lo pagues.
+              </p>
+            )}
             <ul className="divide-y divide-line">
-              {summary.expenseGroups.map((group) =>
-                group.name === null ? (
-                  <ItemRow key={group.items[0].id} item={group.items[0]} month={month} />
+              {progress.groups.map((group) => {
+                const renderItem = (entry: (typeof group.items)[number]) =>
+                  entry.item.tracked ? (
+                    <TrackedRow key={entry.item.id} progress={entry} month={month} />
+                  ) : (
+                    <CheckRow
+                      key={entry.item.id}
+                      progress={entry}
+                      month={month}
+                      check={(checks.data ?? []).find(
+                        (check) => check.planItemId === entry.item.id && check.month === month,
+                      )}
+                    />
+                  )
+                return group.name === null ? (
+                  renderItem(group.items[0])
                 ) : (
                   <li key={group.name} className="py-2">
                     <div className="flex items-baseline justify-between gap-3">
-                      <p className="font-medium">{group.name}</p>
-                      <p className="tabular font-semibold">{formatMoney(group.total)}</p>
+                      <p className="font-medium">
+                        {group.name}{' '}
+                        <span className="text-sm font-normal text-fg-muted">
+                          · {group.paidCount} de {group.count} pagadas
+                        </span>
+                      </p>
+                      <p className="tabular font-semibold">{formatMoney(group.planned)}</p>
                     </div>
-                    <ul className="mt-1 ml-3 border-l border-line pl-3">
-                      {group.items.map((item) => (
-                        <ItemRow key={item.id} item={item} month={month} />
-                      ))}
+                    <ul className="mt-1 ml-1 border-l border-line pl-1">
+                      {group.items.map(renderItem)}
                     </ul>
                   </li>
-                ),
-              )}
+                )
+              })}
             </ul>
           </Section>
 
           <Section
-            title="Ahorro"
+            title="Tarjetas y deudas (ahorro mensual)"
             total={summary.totalSavings}
             kind="saving"
             empty={summary.savings.length === 0}
@@ -261,6 +367,74 @@ export function PlanPage() {
                 <ItemRow key={item.id} item={item} month={month} />
               ))}
             </ul>
+            <div data-money className="mt-1 flex flex-col gap-1 text-sm text-fg-muted">
+              <p>
+                Ya pagaste de tus extractos{' '}
+                <span className="tabular font-semibold text-fg">
+                  {formatMoney(progress.debt.paid)}
+                </span>
+                {' · '}
+                {progress.debt.remaining >= 0 ? (
+                  <>
+                    te quedan{' '}
+                    <span className="tabular font-semibold text-fg">
+                      {formatMoney(progress.debt.remaining)}
+                    </span>{' '}
+                    apartados
+                  </>
+                ) : (
+                  <span className="text-negative">
+                    te pasaste por {formatMoney(progress.debt.over)} (sale de Dinero mío)
+                  </span>
+                )}
+                .
+              </p>
+              {progress.debt.statements.length > 0 && (
+                <p>
+                  Los extractos de este mes piden {formatMoney(progress.debt.due)}; faltan por pagar{' '}
+                  <span className="tabular font-semibold text-fg">
+                    {formatMoney(progress.debt.pending)}
+                  </span>
+                  .
+                </p>
+              )}
+            </div>
+            {progress.debt.statements.length > 0 && (
+              <ul className="divide-y divide-line">
+                {progress.debt.statements.map((statement) => {
+                  const account = (accounts.data ?? []).find((a) => a.id === statement.accountId)
+                  const done = statement.paidAmount >= statement.totalDue && statement.totalDue > 0
+                  return (
+                    <li key={statement.id}>
+                      <Link
+                        to={`/tarjetas/${statement.accountId}`}
+                        className="-mx-2 flex items-baseline justify-between gap-3 rounded-xl px-2 py-2.5 hover:bg-surface-2/50"
+                      >
+                        <span className="min-w-0">
+                          <span className="font-medium">{account?.name ?? 'Tarjeta'}</span>
+                          <span className="block text-sm text-fg-muted">
+                            {done
+                              ? 'Pagado'
+                              : `Pagado ${formatMoney(statement.paidAmount)} de ${formatMoney(statement.totalDue)}`}
+                          </span>
+                        </span>
+                        <span className="shrink-0 tabular font-semibold">
+                          {formatMoney(statement.totalDue)}
+                        </span>
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+            <ButtonLink
+              to="/tarjetas"
+              variant="secondary"
+              className="mt-2 self-start"
+              icon={<CreditCardIcon aria-hidden="true" className="size-4" />}
+            >
+              Mis tarjetas y extractos
+            </ButtonLink>
           </Section>
         </div>
       )}

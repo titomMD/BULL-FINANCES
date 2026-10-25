@@ -10,6 +10,7 @@ const item = (
   startsOn: null,
   endsOn: null,
   sortOrder: 0,
+  tracked: false,
   ...over,
 })
 
@@ -31,6 +32,7 @@ const personal: PersonalMovement[] = [
     categoryId: null,
     notes: null,
     status: 'active',
+    planMonth: null,
     createdBy: null,
     createdAt: '',
     updatedBy: null,

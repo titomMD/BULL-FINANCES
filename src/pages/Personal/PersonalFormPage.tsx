@@ -57,7 +57,8 @@ function PersonalForm({ kind, movement }: { kind: Kind; movement?: PersonalMovem
   const goBack = useGoBack('/personal')
   const toast = useToast()
   const savedToast = useSavedToast()
-  const readOnly = movement?.status === 'voided'
+  const planRow = Boolean(movement?.planMonth)
+  const readOnly = movement?.status === 'voided' || planRow
   const text = copy[kind]
 
   const categories = data.categories.filter(
@@ -114,7 +115,13 @@ function PersonalForm({ kind, movement }: { kind: Kind; movement?: PersonalMovem
 
   return (
     <form onSubmit={onSubmit} noValidate className="flex flex-col gap-6">
-      {readOnly && <VoidedNotice label={text.noun} />}
+      {planRow && (
+        <p className="rounded-xl bg-surface-2 px-3.5 py-3 text-sm">
+          Este ingreso lo genera tu plan del mes («Dinero mío») y se actualiza solo. Para cambiarlo,
+          ajusta tu plan.
+        </p>
+      )}
+      {readOnly && !planRow && <VoidedNotice label={text.noun} />}
       {!movement && <p className="text-sm text-fg-muted">{text.intro}</p>}
       <fieldset disabled={readOnly || isSubmitting} className="flex flex-col gap-6">
         <Controller
@@ -190,7 +197,7 @@ function PersonalForm({ kind, movement }: { kind: Kind; movement?: PersonalMovem
       )}
 
       {movement && <AuditNote audit={movement} />}
-      {movement && !readOnly && (
+      {movement && !readOnly && !planRow && (
         <VoidSection
           label={text.noun}
           onVoid={async () => {

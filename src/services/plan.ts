@@ -1,10 +1,11 @@
 import { supabase } from '../lib/supabase/client'
 import { assertOk, unwrap } from '../lib/errors'
-import type { PlanItem, PlanKind } from '../types/domain'
+import type { PlanCheck, PlanEntry, PlanItem, PlanKind } from '../types/domain'
 
 // Plan del mes. RLS solo deja ver y tocar las líneas de quien está conectado.
 
-const PLAN_COLUMNS = 'id, kind, name, group_name, amount, currency, starts_on, ends_on, sort_order'
+const PLAN_COLUMNS =
+  'id, kind, name, group_name, amount, currency, starts_on, ends_on, sort_order, tracked'
 
 export async function fetchMyPlan(householdId: string): Promise<PlanItem[]> {
   const rows = unwrap(
@@ -25,6 +26,7 @@ export async function fetchMyPlan(householdId: string): Promise<PlanItem[]> {
     startsOn: row.starts_on,
     endsOn: row.ends_on,
     sortOrder: row.sort_order,
+    tracked: row.tracked,
   }))
 }
 
@@ -36,6 +38,8 @@ export interface PlanItemInput {
   startsOn: string | null
   /** 'YYYY-MM-DD' (último día del mes) o null. */
   endsOn: string | null
+  /** Lleva registro de gastos (tanqueadas). Opcional: por defecto no. */
+  tracked?: boolean
 }
 
 const planRow = (input: PlanItemInput) => ({
@@ -44,6 +48,7 @@ const planRow = (input: PlanItemInput) => ({
   amount: input.amount,
   starts_on: input.startsOn,
   ends_on: input.endsOn,
+  ...(input.tracked === undefined ? {} : { tracked: input.tracked }),
 })
 
 export async function createPlanItem(
@@ -81,4 +86,94 @@ export async function updatePlanItem(itemId: string, input: PlanItemInput): Prom
 
 export async function deletePlanItem(itemId: string): Promise<void> {
   assertOk(await supabase.from('plan_items').delete().eq('id', itemId))
+}
+
+// --- Pagos marcados -------------------------------------------------------------------------
+
+export async function fetchMyChecks(householdId: string): Promise<PlanCheck[]> {
+  const rows = unwrap(
+    await supabase
+      .from('plan_checks')
+      .select('id, plan_item_id, month')
+      .eq('household_id', householdId),
+  )
+  return rows.map((row) => ({ id: row.id, planItemId: row.plan_item_id, month: row.month }))
+}
+
+export async function markPaid(householdId: string, itemId: string, month: string): Promise<void> {
+  const result = await supabase
+    .from('plan_checks')
+    .insert({ household_id: householdId, plan_item_id: itemId, month })
+  // Ya estaba marcado (dos toques seguidos): no es un error.
+  if (result.error && result.error.code !== '23505') throw result.error
+}
+
+export async function unmarkPaid(checkId: string): Promise<void> {
+  assertOk(await supabase.from('plan_checks').delete().eq('id', checkId))
+}
+
+// --- Tanqueadas / gastos de una línea -------------------------------------------------------
+
+export async function fetchMyEntries(householdId: string): Promise<PlanEntry[]> {
+  const rows = unwrap(
+    await supabase
+      .from('plan_entries')
+      .select('id, plan_item_id, entry_date, amount, note')
+      .eq('household_id', householdId)
+      .order('entry_date', { ascending: false })
+      .limit(1000),
+  )
+  return rows.map((row) => ({
+    id: row.id,
+    planItemId: row.plan_item_id,
+    date: row.entry_date,
+    amount: row.amount,
+    note: row.note,
+  }))
+}
+
+export interface PlanEntryInput {
+  date: string
+  amount: number
+  note: string
+}
+
+export async function createPlanEntry(
+  householdId: string,
+  itemId: string,
+  input: PlanEntryInput,
+): Promise<void> {
+  assertOk(
+    await supabase.from('plan_entries').insert({
+      household_id: householdId,
+      plan_item_id: itemId,
+      entry_date: input.date,
+      amount: input.amount,
+      note: input.note.trim() || null,
+    }),
+  )
+}
+
+export async function deletePlanEntry(entryId: string): Promise<void> {
+  assertOk(await supabase.from('plan_entries').delete().eq('id', entryId))
+}
+
+/** Cambia el nombre del grupo de todos los gastos que lo tienen (p. ej. «Tarjeta» → «Membresías»). */
+export async function renamePlanGroup(
+  householdId: string,
+  from: string,
+  to: string,
+): Promise<void> {
+  assertOk(
+    await supabase
+      .from('plan_items')
+      .update({ group_name: to.trim() })
+      .eq('household_id', householdId)
+      .eq('group_name', from),
+  )
+}
+
+/** Activa o desactiva el registro de gastos (tanqueadas) de una línea. */
+export async function setTracked(itemId: string, tracked: boolean): Promise<void> {
+  assertOk(await supabase.from('plan_items').update({ tracked }).eq('id', itemId))
 }
