@@ -1,0 +1,433 @@
+/*
+ * BULLMILTON: tokens de diseño (spec §40.1) y sistema de personalización.
+ * ÚNICO lugar donde viven los valores de color, radios y espaciados que cambian con la
+ * apariencia. Los componentes usan las utilidades que Tailwind genera desde aquí (bg-canvas,
+ * text-fg, bg-primary, bg-swatch-azul, ...) o las variables CSS. Nunca HEX sueltos.
+ *
+ * El tema por defecto ("Bullmilton" oscuro) es la paleta de la spec. Lo demás son opciones de
+ * Ajustes → Apariencia (pedidos del usuario, 2026-10-12), aplicadas con atributos en <html>:
+ *   data-theme   familia de colores (cada una con variante oscura y clara)
+ *   data-mode    dark | light (el modo "automático" se resuelve en JS con prefers-color-scheme)
+ *   data-accent  cambia solo primary / primary-soft / on-primary
+ *   data-font, data-density, data-text, data-corners, data-motion, data-private
+ * src/styles/tokens.test.ts comprueba el contraste AA de cada tema × modo × acento y de las
+ * paletas de persona y categoría. Los ids deben coincidir con src/lib/appearance.ts y con los
+ * check de profiles / categories en la base de datos.
+ */
+
+@theme {
+  /* Sin la paleta por defecto de Tailwind: solo existen los colores de este archivo. */
+  --color-*: initial;
+
+  /* Fondos */
+  --color-canvas: #0b0f14; /* Deep Navy: fondo general */
+  --color-surface: #151b22; /* Dark Slate: cards, paneles, navegación */
+  --color-surface-2: #202832; /* Slate: inputs, elementos secundarios, hover */
+
+  /* Texto */
+  --color-fg: #f3f4f6; /* Soft White: títulos y contenido principal */
+  --color-fg-muted: #9ca3af; /* Muted Gray: descripciones y metadatos */
+
+  /* Acción */
+  --color-primary: #f4c542; /* Finance Yellow: botones principales, acciones */
+  --color-primary-soft: #ffe58a; /* Soft Yellow: hover, badges, fondos sutiles */
+  --color-on-primary: var(--color-canvas); /* texto sobre amarillo */
+
+  /* Estados financieros (semánticos: el acento nunca los cambia) */
+  --color-positive: #35c978; /* Finance Green: ingresos, a favor, completado */
+  --color-positive-bg: #123d2a; /* Deep Green: fondo de badges/alertas positivas */
+  --color-negative: #f05252; /* Expense Red: errores, saldos negativos (con moderación) */
+
+  /* Derivados (mezclas de los colores anteriores; no son colores nuevos) */
+  --color-line: color-mix(in oklab, var(--color-fg) 9%, transparent); /* reglas finas */
+  --color-line-strong: color-mix(in oklab, var(--color-fg) 16%, transparent);
+  --color-primary-wash: color-mix(in oklab, var(--color-primary) 14%, transparent);
+  /* Sobre canvas y al 12 %: el texto negativo encima conserva 4,5:1 en todos los temas. */
+  --color-negative-bg: color-mix(in oklab, var(--color-negative) 12%, var(--color-canvas));
+  --color-scrim: color-mix(in oklab, var(--color-canvas) 72%, transparent);
+
+  /*
+   * Colores de persona: identifican a cada miembro en barras, reportes y su avatar. Cuatro tonos
+   * calculados para distinguirse entre sí (ΔE OKLab ≥ 15) y del verde y el rojo del dinero.
+   * Variante oscura aquí; la clara, más profunda, en [data-mode='light'].
+   */
+  --color-person-ambar: #c8942d;
+  --color-person-azul: #56a0fc;
+  --color-person-rosa: #fd7ad6;
+  --color-person-cian: #02f6f6;
+
+  /* Colores de categoría (paleta curada; sin color = neutro). */
+  --color-swatch-ambar: #edb417;
+  --color-swatch-naranja: #fea668;
+  --color-swatch-coral: #ffa28e;
+  --color-swatch-rosa: #fd9bc2;
+  --color-swatch-violeta: #c9adfd;
+  --color-swatch-azul: #92c1fd;
+  --color-swatch-cian: #1cd5ed;
+  --color-swatch-menta: #1addae;
+
+  /* Texto sobre un color de persona o categoría (inicial del avatar). */
+  --color-on-swatch: var(--color-canvas);
+
+  /* Tipografía: pila del sistema por defecto (ver DESIGN.md). */
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  /*
+   * Radios (una sola regla para toda la app): controles (botones, inputs) = xl · paneles = 2xl
+   * · chips = full. "Esquinas" los cambia en [data-corners].
+   */
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Valores que no son colores de la paleta. */
+:root {
+  /* Sombra de toasts y tooltips: en oscuro se funde con el fondo, en claro es tinta suave. */
+  --shadow-tint: var(--color-canvas);
+  /* Icono del selector de fecha nativo (Chrome lo pinta negro). */
+  --picker-filter: invert(0.75);
+  /* Densidad: relleno vertical de las filas del libro y de las tarjetas. */
+  --row-y: 0.75rem;
+  --card-p: 1.25rem;
+}
+
+/* ===========================================================================
+ * Temas: cada familia tiene variante oscura y clara. Cada bloque declara sus colores base
+ * completos para poder previsualizarse dentro de otro (Ajustes → Apariencia).
+ * En los claros, primary es un tono oscuro (legible como texto) y primary-soft su hover, más
+ * oscuro, porque el texto encima es claro.
+ * ========================================================================= */
+
+[data-mode='dark'] {
+  color-scheme: dark;
+}
+
+[data-mode='light'] {
+  color-scheme: light;
+  --shadow-tint: color-mix(in oklab, var(--color-fg) 22%, transparent);
+  --picker-filter: none;
+  --color-on-swatch: #ffffff;
+  --color-person-ambar: #906606;
+  --color-person-azul: #066cd1;
+  --color-person-rosa: #86046b;
+  --color-person-cian: #034747;
+  --color-swatch-ambar: #7d5e07;
+  --color-swatch-naranja: #964d09;
+  --color-swatch-coral: #af2e13;
+  --color-swatch-rosa: #a72a68;
+  --color-swatch-violeta: #7444b4;
+  --color-swatch-azul: #0961bb;
+  --color-swatch-cian: #06707e;
+  --color-swatch-menta: #0f745b;
+}
+
+/* Bullmilton: azul noche y amarillo (paleta de la spec). */
+[data-theme='bullmilton'][data-mode='dark'] {
+  --color-canvas: #0b0f14;
+  --color-surface: #151b22;
+  --color-surface-2: #202832;
+  --color-fg: #f3f4f6;
+  --color-fg-muted: #9ca3af;
+  --color-primary: #f4c542;
+  --color-primary-soft: #ffe58a;
+  --color-on-primary: var(--color-canvas);
+  --color-positive: #35c978;
+  --color-positive-bg: #123d2a;
+  --color-negative: #f05252;
+}
+[data-theme='bullmilton'][data-mode='light'] {
+  --color-canvas: #f2f4f7;
+  --color-surface: #ffffff;
+  --color-surface-2: #e4e8ee;
+  --color-fg: #0b0f14;
+  --color-fg-muted: #4b5563;
+  --color-primary: #7a5800;
+  --color-primary-soft: #5f4400;
+  --color-on-primary: var(--color-surface);
+  --color-positive: #146f3d;
+  --color-positive-bg: #d9f0e2;
+  --color-negative: #b42318;
+}
+
+/* Grafito: gris neutro con naranja. */
+[data-theme='grafito'][data-mode='dark'] {
+  --color-canvas: #111111;
+  --color-surface: #1b1b1b;
+  --color-surface-2: #272727;
+  --color-fg: #f4f4f3;
+  --color-fg-muted: #a3a3a0;
+  --color-primary: #ff9a4d;
+  --color-primary-soft: #ffc49a;
+  --color-on-primary: var(--color-canvas);
+  --color-positive: #4fd18b;
+  --color-positive-bg: #12301f;
+  --color-negative: #ff6b6b;
+}
+[data-theme='grafito'][data-mode='light'] {
+  --color-canvas: #f3f3f1;
+  --color-surface: #ffffff;
+  --color-surface-2: #e6e6e3;
+  --color-fg: #161616;
+  --color-fg-muted: #575754;
+  --color-primary: #a84800;
+  --color-primary-soft: #873900;
+  --color-on-primary: var(--color-surface);
+  --color-positive: #17703f;
+  --color-positive-bg: #dcefe2;
+  --color-negative: #b3261e;
+}
+
+/* Océano: azul profundo con celeste. */
+[data-theme='oceano'][data-mode='dark'] {
+  --color-canvas: #07131c;
+  --color-surface: #0e1f2b;
+  --color-surface-2: #183040;
+  --color-fg: #eef6fa;
+  --color-fg-muted: #94adbd;
+  --color-primary: #4cc3f5;
+  --color-primary-soft: #a9e3fb;
+  --color-on-primary: var(--color-canvas);
+  --color-positive: #3ad69a;
+  --color-positive-bg: #0e3a2c;
+  --color-negative: #ff7088;
+}
+[data-theme='oceano'][data-mode='light'] {
+  --color-canvas: #edf4f8;
+  --color-surface: #ffffff;
+  --color-surface-2: #dbe8f0;
+  --color-fg: #0a1a24;
+  --color-fg-muted: #46606f;
+  --color-primary: #006a96;
+  --color-primary-soft: #005478;
+  --color-on-primary: var(--color-surface);
+  --color-positive: #0f6e4b;
+  --color-positive-bg: #d4efe4;
+  --color-negative: #b4233a;
+}
+
+/* Vino: borgoña con durazno. */
+[data-theme='vino'][data-mode='dark'] {
+  --color-canvas: #170b10;
+  --color-surface: #24121a;
+  --color-surface-2: #351c26;
+  --color-fg: #fbf0f2;
+  --color-fg-muted: #c39ead;
+  --color-primary: #f2b880;
+  --color-primary-soft: #f9dcc0;
+  --color-on-primary: var(--color-canvas);
+  --color-positive: #5fd39a;
+  --color-positive-bg: #143326;
+  --color-negative: #ff6b81;
+}
+[data-theme='vino'][data-mode='light'] {
+  --color-canvas: #f8f0f2;
+  --color-surface: #fffafb;
+  --color-surface-2: #efdfe4;
+  --color-fg: #26121a;
+  --color-fg-muted: #6a4a56;
+  --color-primary: #9a4a14;
+  --color-primary-soft: #7c3a0e;
+  --color-on-primary: var(--color-surface);
+  --color-positive: #17703f;
+  --color-positive-bg: #dcefe2;
+  --color-negative: #b3263a;
+}
+
+/* Papel: crema cálido con ámbar. */
+[data-theme='papel'][data-mode='dark'] {
+  --color-canvas: #15120d;
+  --color-surface: #201b14;
+  --color-surface-2: #2d261c;
+  --color-fg: #f5efe3;
+  --color-fg-muted: #b5aa94;
+  --color-primary: #f0b25a;
+  --color-primary-soft: #f7d29c;
+  --color-on-primary: var(--color-canvas);
+  --color-positive: #4fcf86;
+  --color-positive-bg: #143322;
+  --color-negative: #ff6b62;
+}
+[data-theme='papel'][data-mode='light'] {
+  --color-canvas: #f5f1e8;
+  --color-surface: #fffcf5;
+  --color-surface-2: #ebe5d8;
+  --color-fg: #1f1b14;
+  --color-fg-muted: #5f5748;
+  --color-primary: #8a5300;
+  --color-primary-soft: #6e4200;
+  --color-on-primary: var(--color-surface);
+  --color-positive: #17703f;
+  --color-positive-bg: #dcefe2;
+  --color-negative: #b3261e;
+}
+
+/* Salvia: verde grisáceo con azul. */
+[data-theme='salvia'][data-mode='dark'] {
+  --color-canvas: #0d1310;
+  --color-surface: #161f1a;
+  --color-surface-2: #212d26;
+  --color-fg: #eef3ef;
+  --color-fg-muted: #a0b1a7;
+  --color-primary: #82b8e8;
+  --color-primary-soft: #bad8f3;
+  --color-on-primary: var(--color-canvas);
+  --color-positive: #4fd18b;
+  --color-positive-bg: #12301f;
+  --color-negative: #ff6b6b;
+}
+[data-theme='salvia'][data-mode='light'] {
+  --color-canvas: #edf1ed;
+  --color-surface: #fbfcfa;
+  --color-surface-2: #dfe7e0;
+  --color-fg: #18211b;
+  --color-fg-muted: #536058;
+  --color-primary: #245a87;
+  --color-primary-soft: #1b4769;
+  --color-on-primary: var(--color-surface);
+  --color-positive: #1b6e44;
+  --color-positive-bg: #d8ecdd;
+  --color-negative: #b42318;
+}
+
+/* ===========================================================================
+ * Acentos: solo primary, primary-soft y on-primary. Van después de los temas para ganarles con
+ * la misma especificidad. Sin data-accent, cada tema usa su acento propio.
+ * ========================================================================= */
+
+[data-accent='amarillo'][data-mode='dark'] {
+  --color-primary: #f4c542;
+  --color-primary-soft: #ffe58a;
+  --color-on-primary: var(--color-canvas);
+}
+[data-accent='naranja'][data-mode='dark'] {
+  --color-primary: #ff9a4d;
+  --color-primary-soft: #ffc49a;
+  --color-on-primary: var(--color-canvas);
+}
+[data-accent='coral'][data-mode='dark'] {
+  --color-primary: #ff8a7a;
+  --color-primary-soft: #ffc2b8;
+  --color-on-primary: var(--color-canvas);
+}
+[data-accent='violeta'][data-mode='dark'] {
+  --color-primary: #b69cff;
+  --color-primary-soft: #dccfff;
+  --color-on-primary: var(--color-canvas);
+}
+[data-accent='azul'][data-mode='dark'] {
+  --color-primary: #6cb6ff;
+  --color-primary-soft: #b8dbff;
+  --color-on-primary: var(--color-canvas);
+}
+[data-accent='menta'][data-mode='dark'] {
+  --color-primary: #3fd6b0;
+  --color-primary-soft: #a3eedb;
+  --color-on-primary: var(--color-canvas);
+}
+[data-accent='rosa'][data-mode='dark'] {
+  --color-primary: #ff8fc7;
+  --color-primary-soft: #ffc6e2;
+  --color-on-primary: var(--color-canvas);
+}
+
+[data-accent='amarillo'][data-mode='light'] {
+  --color-primary: #7a5800;
+  --color-primary-soft: #5f4400;
+  --color-on-primary: var(--color-surface);
+}
+[data-accent='naranja'][data-mode='light'] {
+  --color-primary: #a84800;
+  --color-primary-soft: #873900;
+  --color-on-primary: var(--color-surface);
+}
+[data-accent='coral'][data-mode='light'] {
+  --color-primary: #b0392c;
+  --color-primary-soft: #902e23;
+  --color-on-primary: var(--color-surface);
+}
+[data-accent='violeta'][data-mode='light'] {
+  --color-primary: #6a42c8;
+  --color-primary-soft: #5432a6;
+  --color-on-primary: var(--color-surface);
+}
+[data-accent='azul'][data-mode='light'] {
+  --color-primary: #1f5fae;
+  --color-primary-soft: #184b8a;
+  --color-on-primary: var(--color-surface);
+}
+[data-accent='menta'][data-mode='light'] {
+  --color-primary: #00705c;
+  --color-primary-soft: #005747;
+  --color-on-primary: var(--color-surface);
+}
+[data-accent='rosa'][data-mode='light'] {
+  --color-primary: #a8306a;
+  --color-primary-soft: #882554;
+  --color-on-primary: var(--color-surface);
+}
+
+/* ===========================================================================
+ * Tipografías. Autoalojadas con @fontsource-variable: el archivo solo se descarga si la fuente
+ * está elegida. Todas con cifras tabulares para los montos.
+ * ========================================================================= */
+[data-font='system'] {
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+[data-font='geist'] {
+  --font-sans: 'Geist Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+[data-font='manrope'] {
+  --font-sans: 'Manrope Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+[data-font='plex'] {
+  --font-sans: 'IBM Plex Sans Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+[data-font='atkinson'] {
+  --font-sans:
+    'Atkinson Hyperlegible Next Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ===========================================================================
+ * Densidad, tamaño de texto y esquinas
+ * ========================================================================= */
+[data-density='compacta'] {
+  --row-y: 0.4375rem;
+  --card-p: 0.875rem;
+}
+
+/* Todo el tamaño está en rem: subir la raíz escala texto y espacios juntos. */
+:root[data-text='grande'] {
+  font-size: 112.5%;
+}
+:root[data-text='muy_grande'] {
+  font-size: 125%;
+}
+
+[data-corners='suaves'] {
+  --radius-lg: 4px;
+  --radius-xl: 6px;
+  --radius-2xl: 8px;
+}
+[data-corners='rectas'] {
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+}
+
+/* Impresión (Reportes → Extracto → Guardar como PDF): papel blanco y tinta oscura con cualquier
+   tema o modo. La especificidad le gana a los bloques [data-theme][data-mode] y de acento. */
+@media print {
+  :root:root[data-theme][data-mode] {
+    --color-canvas: #ffffff;
+    --color-surface: #ffffff;
+    --color-surface-2: #f1f2f4;
+    --color-fg: #111418;
+    --color-fg-muted: #4b5563;
+    --color-primary: #7a5800;
+    --color-positive: #146f3d;
+    --color-negative: #b3261e;
+  }
+}
