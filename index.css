@@ -1,0 +1,147 @@
+@import 'tailwindcss';
+@import './styles/tokens.css';
+
+/* "Movimiento reducido: siempre" (Ajustes → Apariencia) cuenta igual que la preferencia del
+   sistema: las utilidades motion-reduce: / motion-safe: respetan ambas. */
+@custom-variant motion-reduce {
+  @media (prefers-reduced-motion: reduce) {
+    @slot;
+  }
+  &:where([data-motion='reducido'], [data-motion='reducido'] *) {
+    @slot;
+  }
+}
+@custom-variant motion-safe {
+  @media (prefers-reduced-motion: no-preference) {
+    &:where(:not([data-motion='reducido'], [data-motion='reducido'] *)) {
+      @slot;
+    }
+  }
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    scrollbar-color: var(--color-surface-2) transparent;
+    -webkit-text-size-adjust: 100%;
+    /* En móvil hay barras fijas abajo (acciones rápidas, botón Guardar): al llevar el foco a un
+       campo, el navegador deja este margen para que no quede tapado (WCAG 2.4.11). */
+    scroll-padding-bottom: 9rem;
+  }
+  @media (min-width: 64rem) {
+    :root {
+      scroll-padding-bottom: 0;
+    }
+  }
+
+  body {
+    @apply bg-canvas font-sans text-fg antialiased;
+    -webkit-tap-highlight-color: transparent;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+  }
+
+  ::selection {
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  input,
+  textarea,
+  select {
+    caret-color: var(--color-primary);
+  }
+
+  a {
+    text-underline-offset: 3px;
+  }
+
+  /* Selector de fecha nativo legible en temas oscuros y claros. */
+  input[type='date']::-webkit-calendar-picker-indicator {
+    filter: var(--picker-filter);
+    cursor: pointer;
+  }
+
+  /* Movimiento reducido: se quitan pulsos; los desplazamientos se anulan en cada componente con
+     motion-reduce:. Los cambios de estado siguen visibles (opacidad, color) y el spinner de
+     carga sigue girando porque es feedback. */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    .animate-pulse {
+      animation: none;
+    }
+  }
+  [data-motion='reducido'] {
+    scroll-behavior: auto;
+  }
+  [data-motion='reducido'] .animate-pulse {
+    animation: none;
+  }
+
+  /* Modo privado: los montos (utilidad tabular, o líneas marcadas data-money) se ocultan hasta
+     tocarlos; ver src/lib/privacy.ts. Los campos donde se escribe un monto quedan visibles. */
+  [data-private]
+    :is(.tabular, [data-money]):not(
+      input,
+      textarea,
+      button,
+      label,
+      a,
+      [data-not-money],
+      [data-revealed]
+    ) {
+    filter: blur(0.5em);
+    cursor: pointer;
+    user-select: none;
+  }
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+
+/* Logo: en temas oscuros el trazo va en Soft White; en claros, el azul marino original. */
+:root[data-mode='light'] .brand-on-dark,
+:root:not([data-mode='light']) .brand-on-light {
+  display: none;
+}
+
+@media print {
+  @page {
+    margin: 14mm;
+  }
+  /* El modo privado no aplica al papel: quien imprime el extracto quiere ver los montos. */
+  [data-private] :is(.tabular, [data-money]) {
+    filter: none !important;
+  }
+}
