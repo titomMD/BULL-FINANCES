@@ -329,7 +329,7 @@ function ExportButtons() {
           fetchMyPersonalMovements(data.household.id),
         ])
         await downloadXlsx(
-          `mis-finanzas-${stamp}.xlsx`,
+          `freyapp-${stamp}.xlsx`,
           buildXlsxSheets({
             tables: result.tables,
             plan,
@@ -339,10 +339,10 @@ function ExportButtons() {
           }),
         )
       } else if (format === 'json') {
-        downloadFile(`bullmilton-${stamp}.json`, result.json, 'application/json')
+        downloadFile(`freyapp-${stamp}.json`, result.json, 'application/json')
       } else {
         for (const [name, content] of Object.entries(result.csv))
-          downloadFile(`bullmilton-${stamp}-${name}`, content, 'text/csv;charset=utf-8')
+          downloadFile(`freyapp-${stamp}-${name}`, content, 'text/csv;charset=utf-8')
       }
       toast.show('Exportación lista')
     } catch (error) {

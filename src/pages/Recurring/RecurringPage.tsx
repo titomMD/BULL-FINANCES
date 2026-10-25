@@ -80,7 +80,7 @@ export function RecurringPage() {
           title="Sin gastos recurrentes"
           action={<ButtonLink to="/recurrentes/nuevo">Crear el primero</ButtonLink>}
         >
-          Arriendo, internet, servicios o Netflix: créalos una vez y BULLMILTON te los recuerda cada
+          Arriendo, internet, servicios o Netflix: créalos una vez y Freyapp te los recuerda cada
           mes.
         </EmptyState>
       ) : (

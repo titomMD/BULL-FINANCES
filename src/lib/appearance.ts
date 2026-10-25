@@ -4,7 +4,7 @@
 // base de datos (migraciones 20261012114038 y 20261012162710).
 
 export const themes = [
-  { id: 'bullmilton', name: 'Bullmilton', detail: 'Azul noche y amarillo. El original.' },
+  { id: 'bullmilton', name: 'Freya', detail: 'Café atigrado y caramelo. El de Freyapp.' },
   { id: 'grafito', name: 'Grafito', detail: 'Gris neutro con naranja.' },
   { id: 'oceano', name: 'Océano', detail: 'Azul profundo con celeste.' },
   { id: 'vino', name: 'Vino', detail: 'Borgoña con durazno.' },

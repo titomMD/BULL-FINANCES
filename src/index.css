@@ -130,12 +130,6 @@
   }
 }
 
-/* Logo: en temas oscuros el trazo va en Soft White; en claros, el azul marino original. */
-:root[data-mode='light'] .brand-on-dark,
-:root:not([data-mode='light']) .brand-on-light {
-  display: none;
-}
-
 @media print {
   @page {
     margin: 14mm;

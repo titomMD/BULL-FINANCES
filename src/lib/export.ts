@@ -199,7 +199,7 @@ export function buildExport(input: ExportInput) {
   )
 
   const json = {
-    app: 'BULLMILTON',
+    app: 'Freyapp',
     version: 1,
     exportedAt: input.exportedAt,
     household: input.householdName,

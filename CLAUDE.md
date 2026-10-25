@@ -1,9 +1,11 @@
-# BULLMILTON — reglas permanentes del proyecto
+# Freyapp (código base: BULLMILTON) — reglas permanentes del proyecto
 
 ## Fuente de verdad
 
 - La especificación es `SHAREDFIN_ESPECIFICACION_COMPLETA_CLAUDE_COLORES.md`. El documento llama
-  al producto "SharedFin"; el nombre real es **BULLMILTON** (código, UI, package.json, docs).
+  al producto "SharedFin"; el nombre del producto es **Freyapp** (UI, título, manifest, exportaciones); el repo y el paquete
+  conservan el nombre interno `bullmilton`, y el tema por defecto conserva el id `bullmilton`
+  (los ids están en check de la base de datos) con el nombre visible «Freya».
   Todo lo demás del documento sigue vigente.
 - Respeta las reglas de la sección 70: incremental, verificar antes de cambiar arquitectura,
   seguridad primero, no sobreingeniería, lógica financiera separada, database-first para reglas

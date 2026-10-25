@@ -523,7 +523,7 @@ export function AppearancePage() {
             onClick={() => choose(defaultAppearance)}
             icon={<ArrowCounterClockwiseIcon aria-hidden="true" className="size-4" weight="bold" />}
           >
-            Restablecer a Bullmilton
+            Restablecer a Freya
           </Button>
           <p className="mt-2 text-sm text-fg-muted">
             Vuelve al tema original: oscuro, amarillo, letra del sistema. Tu color no cambia.

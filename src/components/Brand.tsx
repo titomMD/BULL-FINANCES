@@ -1,22 +1,20 @@
-import markOnDark from '../assets/brand/mark-dark.webp'
-import markOnLight from '../assets/brand/mark-light.webp'
+import freya from '../assets/brand/freya.svg'
 
-// Logo (opción B): toro de líneas con la gráfica al alza. El trazo azul marino del original se
-// pierde sobre el fondo oscuro de la app, así que en modo oscuro va en Soft White; el dorado se
-// mantiene en ambos. index.css muestra la variante que toca según data-mode.
+// Logo: la cara de Freya, la gata del autor (src/assets/brand/freya.svg). Sus colores son los
+// de la foto (pelaje, nariz, ojos), se ven bien sobre fondo oscuro y claro, así que no hay
+// variantes por tema.
 
 const sizes = {
-  sm: { mark: 'h-9', text: 'text-lg' },
-  lg: { mark: 'h-20', text: 'text-xl' },
+  sm: { mark: 'size-9', text: 'text-lg' },
+  lg: { mark: 'size-20', text: 'text-2xl' },
 } as const
 
 export function Brand({ size = 'sm' }: { size?: keyof typeof sizes }) {
   const classes = sizes[size]
   return (
     <span className={`flex items-center gap-2.5 ${size === 'lg' ? 'flex-col items-start' : ''}`}>
-      <img src={markOnDark} alt="" className={`brand-on-dark w-auto ${classes.mark}`} />
-      <img src={markOnLight} alt="" className={`brand-on-light w-auto ${classes.mark}`} />
-      <span className={`font-bold tracking-wide ${classes.text}`}>BULLMILTON</span>
+      <img src={freya} alt="" className={classes.mark} />
+      <span className={`font-bold tracking-tight ${classes.text}`}>Freyapp</span>
     </span>
   )
 }

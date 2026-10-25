@@ -1,12 +1,13 @@
-# BULLMILTON
+# Freyapp
 
 > **Origen.** Este proyecto parte de [BULLMILTON](https://github.com/camiloherrera-dev/BULLMILTON),
 > de camiloherrera-dev, y se está adaptando a finanzas personales. El repo original no incluye
 > licencia: antes de publicar esta versión, confirma por escrito con su autor qué se puede hacer
 > (lo ideal es que añada una licencia, p. ej. MIT). Despliegue en Netlify: [`netlify.toml`](./netlify.toml).
 
-Libreta financiera compartida para dos personas: registra gastos, ingresos y transferencias y
-calcula automáticamente quién le debe cuánto a quién.
+Freyapp (nombre y logo inspirados en Freya, la gata del autor) es una libreta de finanzas
+personales: plan del mes, dinero libre, gastos, ingresos y exportación a Excel. Por debajo conserva
+el motor de BULLMILTON (hogar compartido, saldo entre dos personas).
 
 Especificación: [`SHAREDFIN_ESPECIFICACION_COMPLETA_CLAUDE_COLORES.md`](./SHAREDFIN_ESPECIFICACION_COMPLETA_CLAUDE_COLORES.md)
 (el documento usa el nombre provisional "SharedFin").

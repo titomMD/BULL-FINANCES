@@ -255,7 +255,7 @@ otp_expiry = 3600
 # Recuperación de contraseña: el enlace va a /restablecer con token_hash (la app lo verifica con
 # verifyOtp; funciona aunque el correo se abra en otro navegador).
 [auth.email.template.recovery]
-subject = "Restablece tu contraseña de BULLMILTON"
+subject = "Restablece tu contraseña de Freyapp"
 content_path = "./supabase/templates/recovery.html"
 
 # Uncomment to customize email template

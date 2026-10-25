@@ -1,15 +1,15 @@
 ---
-name: BULLMILTON
+name: Freyapp
 description: Libreta financiera compartida para un hogar de dos; el saldo disponible de cada uno como respuesta principal.
 colors:
-  canvas: '#0b0f14'
-  surface: '#151b22'
-  surface-2: '#202832'
-  fg: '#f3f4f6'
-  fg-muted: '#9ca3af'
-  primary: '#f4c542'
-  primary-soft: '#ffe58a'
-  on-primary: '#0b0f14'
+  canvas: '#15110f'
+  surface: '#1f1a17'
+  surface-2: '#2c2521'
+  fg: '#f6efe8'
+  fg-muted: '#b5a89c'
+  primary: '#e8b887'
+  primary-soft: '#f5d6b5'
+  on-primary: '#15110f'
   positive: '#35c978'
   positive-bg: '#123d2a'
   negative: '#f05252'

@@ -71,7 +71,7 @@ export function StatementPage() {
   // El título del documento es el nombre que propone el navegador al guardar el PDF.
   useEffect(() => {
     const previous = document.title
-    document.title = `Extracto ${range.from} a ${range.to} · BULLMILTON`
+    document.title = `Extracto ${range.from} a ${range.to} · Freyapp`
     return () => {
       document.title = previous
     }
@@ -168,7 +168,7 @@ export function StatementPage() {
         className="flex flex-col gap-8 rounded-2xl bg-surface p-5 sm:p-8 print:rounded-none print:p-0"
       >
         <header className="flex flex-col gap-1">
-          <p className="text-sm font-bold tracking-wide">BULLMILTON · {data.household.name}</p>
+          <p className="text-sm font-bold tracking-wide">Freyapp · {data.household.name}</p>
           <h1 className="text-2xl font-semibold tracking-tight">Extracto de gastos</h1>
           <p className="text-fg-muted">
             Del {period}. Generado el {longDate(today)}.

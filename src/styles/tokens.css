@@ -1,10 +1,10 @@
 /*
- * BULLMILTON: tokens de diseño (spec §40.1) y sistema de personalización.
+ * Freyapp: tokens de diseño y sistema de personalización (parte de la spec §40.1 de BULLMILTON).
  * ÚNICO lugar donde viven los valores de color, radios y espaciados que cambian con la
  * apariencia. Los componentes usan las utilidades que Tailwind genera desde aquí (bg-canvas,
  * text-fg, bg-primary, bg-swatch-azul, ...) o las variables CSS. Nunca HEX sueltos.
  *
- * El tema por defecto ("Bullmilton" oscuro) es la paleta de la spec. Lo demás son opciones de
+ * El tema por defecto ("Freya" oscuro) toma los colores del pelaje de Freya (era la paleta azul y amarillo de la spec). Lo demás son opciones de
  * Ajustes → Apariencia (pedidos del usuario, 2026-10-12), aplicadas con atributos en <html>:
  *   data-theme   familia de colores (cada una con variante oscura y clara)
  *   data-mode    dark | light (el modo "automático" se resuelve en JS con prefers-color-scheme)
@@ -20,18 +20,18 @@
   --color-*: initial;
 
   /* Fondos */
-  --color-canvas: #0b0f14; /* Deep Navy: fondo general */
-  --color-surface: #151b22; /* Dark Slate: cards, paneles, navegación */
-  --color-surface-2: #202832; /* Slate: inputs, elementos secundarios, hover */
+  --color-canvas: #15110f; /* Noche cálida: fondo general */
+  --color-surface: #1f1a17; /* Café oscuro: cards, paneles, navegación */
+  --color-surface-2: #2c2521; /* Café: inputs, elementos secundarios, hover */
 
   /* Texto */
-  --color-fg: #f3f4f6; /* Soft White: títulos y contenido principal */
-  --color-fg-muted: #9ca3af; /* Muted Gray: descripciones y metadatos */
+  --color-fg: #f6efe8; /* Crema: títulos y contenido principal */
+  --color-fg-muted: #b5a89c; /* Beige apagado: descripciones y metadatos */
 
   /* Acción */
-  --color-primary: #f4c542; /* Finance Yellow: botones principales, acciones */
-  --color-primary-soft: #ffe58a; /* Soft Yellow: hover, badges, fondos sutiles */
-  --color-on-primary: var(--color-canvas); /* texto sobre amarillo */
+  --color-primary: #e8b887; /* Caramelo atigrado: botones principales, acciones */
+  --color-primary-soft: #f5d6b5; /* Caramelo claro: hover, badges, fondos sutiles */
+  --color-on-primary: var(--color-canvas); /* texto sobre caramelo */
 
   /* Estados financieros (semánticos: el acento nunca los cambia) */
   --color-positive: #35c978; /* Finance Green: ingresos, a favor, completado */
@@ -124,28 +124,28 @@
   --color-swatch-menta: #0f745b;
 }
 
-/* Bullmilton: azul noche y amarillo (paleta de la spec). */
+/* Freya: pelaje atigrado (café y caramelo) con crema. Id interno: 'bullmilton'. */
 [data-theme='bullmilton'][data-mode='dark'] {
-  --color-canvas: #0b0f14;
-  --color-surface: #151b22;
-  --color-surface-2: #202832;
-  --color-fg: #f3f4f6;
-  --color-fg-muted: #9ca3af;
-  --color-primary: #f4c542;
-  --color-primary-soft: #ffe58a;
+  --color-canvas: #15110f;
+  --color-surface: #1f1a17;
+  --color-surface-2: #2c2521;
+  --color-fg: #f6efe8;
+  --color-fg-muted: #b5a89c;
+  --color-primary: #e8b887;
+  --color-primary-soft: #f5d6b5;
   --color-on-primary: var(--color-canvas);
-  --color-positive: #35c978;
-  --color-positive-bg: #123d2a;
+  --color-positive: #4fd18b;
+  --color-positive-bg: #12301f;
   --color-negative: #f05252;
 }
 [data-theme='bullmilton'][data-mode='light'] {
-  --color-canvas: #f2f4f7;
+  --color-canvas: #f8f3ed;
   --color-surface: #ffffff;
-  --color-surface-2: #e4e8ee;
-  --color-fg: #0b0f14;
-  --color-fg-muted: #4b5563;
-  --color-primary: #7a5800;
-  --color-primary-soft: #5f4400;
+  --color-surface-2: #ece4da;
+  --color-fg: #1f1a17;
+  --color-fg-muted: #5f544b;
+  --color-primary: #8a5427;
+  --color-primary-soft: #6e4120;
   --color-on-primary: var(--color-surface);
   --color-positive: #146f3d;
   --color-positive-bg: #d9f0e2;

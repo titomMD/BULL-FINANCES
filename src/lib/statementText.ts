@@ -48,7 +48,7 @@ export function statementToText(statement: Statement, labels: StatementLabels): 
     'Los montos están en pesos colombianos (COP, sin decimales); no inventes datos que no estén aquí.',
     '',
     `# Extracto de gastos · ${labels.household}`,
-    `Periodo: ${labels.period}. Generado el ${longDate(labels.generatedOn)} desde BULLMILTON.`,
+    `Periodo: ${labels.period}. Generado el ${longDate(labels.generatedOn)} desde Freyapp.`,
     '',
     '## Resumen',
     `- Ingresos: ${formatMoney(totals.incomes)}`,

@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="Freya">
+  <g stroke-linejoin="round" stroke-linecap="round">
+    <!-- orejas -->
+    <path d="M32 122 C26 84 32 54 46 32 C72 38 98 50 114 66 Z" fill="#8b7a68" stroke="#8b7a68" stroke-width="8"/>
+    <path d="M208 122 C214 84 208 54 194 32 C168 38 142 50 126 66 Z" fill="#8b7a68" stroke="#8b7a68" stroke-width="8"/>
+    <path d="M46 98 C42 76 46 60 52 48 C68 54 82 62 92 72 Z" fill="#eab0bd" stroke="#eab0bd" stroke-width="4"/>
+    <path d="M194 98 C198 76 194 60 188 48 C172 54 158 62 148 72 Z" fill="#eab0bd" stroke="#eab0bd" stroke-width="4"/>
+    <!-- cabeza -->
+    <path d="M26 132 C26 78 66 52 120 52 C174 52 214 78 214 132 C214 188 172 220 120 220 C68 220 26 188 26 132 Z" fill="#8b7a68"/>
+    <!-- rayas de la frente -->
+    <g fill="none" stroke="#4a3f36" stroke-width="7">
+      <path d="M120 58 L120 80"/>
+      <path d="M102 62 L108 82"/>
+      <path d="M138 62 L132 82"/>
+      <path d="M32 126 L58 130"/>
+      <path d="M34 148 L60 146"/>
+      <path d="M208 126 L182 130"/>
+      <path d="M206 148 L180 146"/>
+    </g>
+    <!-- franja y hocico blancos -->
+    <path d="M120 84 C112 100 106 114 98 130 C80 136 70 156 82 176 C92 192 108 200 120 200 C132 200 148 192 158 176 C170 156 160 136 142 130 C134 114 128 100 120 84 Z" fill="#fbf6f0" stroke="#fbf6f0" stroke-width="6"/>
+    <!-- ojos -->
+    <circle cx="80" cy="112" r="22" fill="#a3a23f" stroke="#4a3f36" stroke-width="4"/>
+    <circle cx="160" cy="112" r="22" fill="#a3a23f" stroke="#4a3f36" stroke-width="4"/>
+    <circle cx="82" cy="113" r="12" fill="#1a1512" stroke="none"/>
+    <circle cx="158" cy="113" r="12" fill="#1a1512" stroke="none"/>
+    <circle cx="86" cy="108" r="4.5" fill="#fff" stroke="none"/>
+    <circle cx="162" cy="108" r="4.5" fill="#fff" stroke="none"/>
+    <!-- nariz y boca -->
+    <path d="M107 150 Q120 143 133 150 Q129 163 120 168 Q111 163 107 150 Z" fill="#eba3b4" stroke="#eba3b4" stroke-width="3"/>
+    <g fill="none" stroke="#6b5a4d" stroke-width="3.5">
+      <path d="M120 170 L120 178"/>
+      <path d="M120 178 Q111 187 102 180"/>
+      <path d="M120 178 Q129 187 138 180"/>
+    </g>
+    <!-- bigotes -->
+    <g fill="none" stroke="#cdb79e" stroke-width="3">
+      <path d="M150 172 L226 160"/>
+      <path d="M152 181 L230 182"/>
+      <path d="M150 190 L224 204"/>
+      <path d="M90 172 L14 160"/>
+      <path d="M88 181 L10 182"/>
+      <path d="M90 190 L16 204"/>
+    </g>
+  </g>
+</svg>

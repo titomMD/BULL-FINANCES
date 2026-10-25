@@ -101,7 +101,7 @@ describe('buildExport', () => {
 
   it('el JSON es un respaldo completo y legible', () => {
     const parsed = JSON.parse(result.json)
-    expect(parsed.app).toBe('BULLMILTON')
+    expect(parsed.app).toBe('Freyapp')
     expect(parsed.expenses).toHaveLength(1)
     expect(parsed.expenses[0].splits).toHaveLength(2)
   })
