@@ -168,3 +168,20 @@ export interface PersonalMovement extends Audit {
 /** División pedida al crear/editar: participantes (iguales) o porcentajes en puntos básicos. */
 export type SplitInput =
   { type: 'equal'; participants: string[] } | { type: 'percentage'; shares: RecurringSplit[] }
+
+/** Línea del plan mensual personal: ingreso, gasto fijo o ahorro. */
+export type PlanKind = 'income' | 'expense' | 'saving'
+
+export interface PlanItem {
+  id: string
+  kind: PlanKind
+  name: string
+  /** Agrupa gastos que se pagan juntos (p. ej. "Tarjeta"). */
+  groupName: string | null
+  amount: number
+  currency: string
+  /** Primer y último día (cuenta el mes). Null = sin límite. */
+  startsOn: string | null
+  endsOn: string | null
+  sortOrder: number
+}

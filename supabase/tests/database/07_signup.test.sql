@@ -1,4 +1,4 @@
--- BULLMILTON · pgTAP · Registro solo con invitación (hook Before User Created)
+-- BULLMILTON · pgTAP · Registro abierto; un código escrito debe ser válido (hook Before User Created)
 begin;
 create extension if not exists pgtap with schema extensions;
 
@@ -44,9 +44,9 @@ select is(
 );
 
 select is(
-  public.hook_before_user_created(pg_temp.event(null)) -> 'error' ->> 'message',
-  'invalid_invitation',
-  'Sin código no se crea la cuenta'
+  public.hook_before_user_created(pg_temp.event(null)),
+  '{}'::jsonb,
+  'Sin código también se puede crear la cuenta (registro abierto, p. ej. con Google)'
 );
 
 select is(

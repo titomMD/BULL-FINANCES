@@ -180,8 +180,8 @@ enable_refresh_token_rotation = true
 # Requires enable_refresh_token_rotation = true.
 refresh_token_reuse_interval = 10
 # Allow/disallow new user signups to your project.
-# BULLMILTON: registro solo con código de invitación; lo hace cumplir el hook
-# before_user_created de abajo (sin él, el registro quedaría abierto).
+# BULLMILTON (versión personal): registro abierto. El hook before_user_created de abajo solo
+# rechaza un código de invitación escrito que no sea válido.
 enable_signup = true
 # Allow/disallow anonymous sign-ins to your project.
 enable_anonymous_sign_ins = false

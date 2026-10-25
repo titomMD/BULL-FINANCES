@@ -145,3 +145,23 @@ export const recurringSchema = z
   .superRefine(refineSplit)
 
 export type RecurringFormValues = z.infer<typeof recurringSchema>
+
+const monthField = z
+  .string()
+  .refine((value) => value === '' || /^\d{4}-(0[1-9]|1[0-2])$/.test(value), 'Elige un mes válido.')
+
+/** Línea del plan mensual (ingreso, gasto fijo o ahorro). Los meses vienen de <input type="month">. */
+export const planItemSchema = z
+  .object({
+    name: z.string().trim().min(1, 'Ponle un nombre.').max(80, 'Máximo 80 caracteres.'),
+    amount: moneyField,
+    groupName: z.string().trim().max(60, 'Máximo 60 caracteres.'),
+    startMonth: monthField,
+    endMonth: monthField,
+  })
+  .refine((value) => !value.startMonth || !value.endMonth || value.endMonth >= value.startMonth, {
+    path: ['endMonth'],
+    message: 'El último mes no puede ser anterior al primero.',
+  })
+
+export type PlanItemFormValues = z.input<typeof planItemSchema>

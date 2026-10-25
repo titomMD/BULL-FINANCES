@@ -135,25 +135,46 @@ function JoinForm({ defaultCode, autoJoin }: { defaultCode?: string; autoJoin?: 
   )
 }
 
-/** Primer ingreso (FASE 3): crear el hogar o unirse con un código. */
+/** Sin código de invitación: se crea solo el hogar personal («Mis finanzas») y se entra. */
+function AutoSetup({ onFail }: { onFail: () => void }) {
+  const navigate = useNavigate()
+  // Una sola vez (StrictMode monta dos veces en desarrollo).
+  const tried = useRef(false)
+  useEffect(() => {
+    if (tried.current) return
+    tried.current = true
+    createHousehold('Mis finanzas')
+      .then(() => {
+        invalidateData()
+        navigate('/', { replace: true })
+      })
+      .catch(onFail)
+  }, [navigate, onFail])
+  return <FullScreenLoader label="Preparando tu espacio" />
+}
+
+/**
+ * Primer ingreso: con código de invitación se une al hogar; sin código se crea su hogar personal.
+ * Si la creación automática falla, se muestra el formulario para hacerlo a mano.
+ */
 export function WelcomePage() {
   const { userId, email, session } = useSignedInUser()
   // Código con el que se registró (/registro lo guarda en los metadatos de la cuenta).
   const invited = (session.user.user_metadata?.invite_code as string | undefined) ?? undefined
   const [mode, setMode] = useState<Mode>(invited ? 'join' : 'create')
+  const [autoFailed, setAutoFailed] = useState(false)
   const existing = useResource(`household:${userId}`, () => fetchMyHousehold(userId))
 
   if (existing.loading) return <FullScreenLoader />
   if (existing.data) return <Navigate to="/" replace />
+  if (!invited && !autoFailed) return <AutoSetup onFail={() => setAutoFailed(true)} />
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-center gap-8 px-4 py-12">
       <header className="flex flex-col gap-2">
         <Brand size="lg" />
         <h1 className="text-2xl font-semibold tracking-tight">Arma tu hogar</h1>
-        <p className="text-fg-muted">
-          Uno de los dos crea el hogar; el otro se une con el código de invitación.
-        </p>
+        <p className="text-fg-muted">Crea tu espacio o únete a uno con un código de invitación.</p>
       </header>
 
       <Segmented<Mode>

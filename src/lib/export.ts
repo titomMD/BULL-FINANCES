@@ -6,7 +6,15 @@ import type { Category, Member, Movement, RecurringExpense } from '../types/doma
 /** Excel en español (Colombia) usa ';' como separador de listas. */
 export const CSV_DELIMITER = ';'
 
-type Cell = string | number | boolean | null | undefined
+export type Cell = string | number | boolean | null | undefined
+
+/** Una tabla de la exportación: encabezados y filas. Sirve para el CSV y para el Excel. */
+export interface Table {
+  headers: string[]
+  rows: Cell[][]
+}
+
+const table = (headers: string[], rows: Cell[][]): Table => ({ headers, rows })
 
 function escapeCell(value: Cell): string {
   if (value === null || value === undefined) return ''
@@ -44,8 +52,8 @@ export function buildExport(input: ExportInput) {
   const transfers = input.movements.filter((movement) => movement.kind === 'transfer')
   const cardPayments = input.movements.filter((movement) => movement.kind === 'card_payment')
 
-  const csv: Record<string, string> = {
-    'gastos.csv': toCsv(
+  const tables: Record<string, Table> = {
+    'gastos.csv': table(
       [
         'id',
         'fecha',
@@ -80,7 +88,7 @@ export function buildExport(input: ExportInput) {
         expense.createdAt,
       ]),
     ),
-    'ingresos.csv': toCsv(
+    'ingresos.csv': table(
       [
         'id',
         'fecha',
@@ -116,7 +124,7 @@ export function buildExport(input: ExportInput) {
         income.createdAt,
       ]),
     ),
-    'transferencias.csv': toCsv(
+    'transferencias.csv': table(
       ['id', 'fecha', 'envia', 'recibe', 'monto', 'moneda', 'estado', 'nota', 'creado'],
       transfers.map((transfer) => [
         transfer.id,
@@ -130,7 +138,7 @@ export function buildExport(input: ExportInput) {
         transfer.createdAt,
       ]),
     ),
-    'pagos_tarjeta.csv': toCsv(
+    'pagos_tarjeta.csv': table(
       ['id', 'fecha', 'persona', 'monto', 'moneda', 'estado', 'nota', 'creado'],
       cardPayments.map((payment) => [
         payment.id,
@@ -143,7 +151,7 @@ export function buildExport(input: ExportInput) {
         payment.createdAt,
       ]),
     ),
-    'categorias.csv': toCsv(
+    'categorias.csv': table(
       ['id', 'tipo', 'nombre', 'icono', 'archivada'],
       input.categories.map((category) => [
         category.id,
@@ -153,7 +161,7 @@ export function buildExport(input: ExportInput) {
         category.archivedAt ? 'si' : 'no',
       ]),
     ),
-    'recurrentes.csv': toCsv(
+    'recurrentes.csv': table(
       [
         'id',
         'nombre',
@@ -186,6 +194,10 @@ export function buildExport(input: ExportInput) {
     ),
   }
 
+  const csv = Object.fromEntries(
+    Object.entries(tables).map(([filename, { headers, rows }]) => [filename, toCsv(headers, rows)]),
+  )
+
   const json = {
     app: 'BULLMILTON',
     version: 1,
@@ -200,7 +212,7 @@ export function buildExport(input: ExportInput) {
     recurringExpenses: input.recurring,
   }
 
-  return { csv, json: JSON.stringify(json, null, 2) }
+  return { csv, tables, json: JSON.stringify(json, null, 2) }
 }
 
 /** Descarga un archivo generado en el navegador (sin pasar por ningún servidor). */

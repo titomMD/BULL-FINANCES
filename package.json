@@ -39,6 +39,7 @@
     "react-is": "^19.3.0",
     "react-router": "^8.4.0",
     "recharts": "^3.10.1",
+    "write-excel-file": "^4.1.1",
     "zod": "^4.6.6"
   },
   "devDependencies": {

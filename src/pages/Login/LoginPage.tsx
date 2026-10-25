@@ -9,6 +9,7 @@ import { Button } from '../../components/ui/Button'
 import { Field, TextInput } from '../../components/ui/Field'
 import { ErrorState } from '../../components/ui/States'
 import { Brand } from '../../components/Brand'
+import { GoogleButton } from '../../components/GoogleButton'
 
 const schema = z.object({
   email: z.email('Escribe un email válido.'),
@@ -17,7 +18,7 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>
 
-// Registro solo con código de invitación: /registro (lo hace cumplir un hook de Supabase Auth).
+// Registro abierto: /registro (email o Google). El código de invitación solo sirve para unirse a un hogar.
 // La contraseña olvidada se recupera por email: /recuperar → /restablecer.
 export function LoginPage() {
   const [error, setError] = useState<string | null>(null)
@@ -42,11 +43,16 @@ export function LoginPage() {
       <header className="flex flex-col gap-2">
         <Brand size="lg" />
         <h1 className="text-2xl font-semibold tracking-tight text-balance">
-          Entra para ver cómo van las cuentas de la casa
+          Entra para ver cómo van tus finanzas
         </h1>
       </header>
 
-      <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
+      <GoogleButton />
+      <p className="flex items-center gap-3 text-sm text-fg-muted before:h-px before:flex-1 before:bg-line after:h-px after:flex-1 after:bg-line">
+        o con tu email
+      </p>
+
+      <form onSubmit={onSubmit} noValidate className="-mt-4 flex flex-col gap-4">
         {error && <ErrorState message={error} />}
         <Field label="Email" error={errors.email?.message}>
           {({ id, describedBy, invalid }) => (
@@ -81,7 +87,7 @@ export function LoginPage() {
       </form>
 
       <p className="text-center text-sm text-fg-muted">
-        ¿Te invitaron?{' '}
+        ¿Aún no tienes cuenta?{' '}
         <Link to="/registro" className="font-medium text-fg underline hover:text-primary">
           Crea tu cuenta
         </Link>

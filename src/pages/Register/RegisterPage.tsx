@@ -11,6 +11,7 @@ import { Button } from '../../components/ui/Button'
 import { Field, TextInput } from '../../components/ui/Field'
 import { ErrorState } from '../../components/ui/States'
 import { Brand } from '../../components/Brand'
+import { GoogleButton } from '../../components/GoogleButton'
 
 const schema = z
   .object({
@@ -18,16 +19,17 @@ const schema = z
       .string()
       .trim()
       .transform((value) => value.toUpperCase().replace(/[\s-]/g, ''))
-      .pipe(z.string().regex(/^[A-HJ-NP-Z2-9]{10}$/, 'El código tiene 10 letras y números.')),
+      .pipe(z.string().regex(/^([A-HJ-NP-Z2-9]{10})?$/, 'El código tiene 10 letras y números.')),
     name: z.string().trim().min(1, '¿Cómo te llamas?').max(60, 'Máximo 60 caracteres.'),
     email: z.email('Escribe un email válido.'),
   })
   .and(newPasswordSchema)
 
 /**
- * Registro solo con invitación (decisión del usuario, 2026-10-12). El código viaja en los
- * metadatos de la cuenta: el hook de Supabase Auth lo verifica antes de crearla y, al entrar,
- * la bienvenida une a la persona al hogar con ese mismo código.
+ * Registro abierto (versión personal, 2026-10-25). El código de invitación es opcional: si alguien
+ * lo trae, viaja en los metadatos de la cuenta, el hook de Supabase Auth lo verifica antes de
+ * crearla y, al entrar, la bienvenida une a la persona a ese hogar. Sin código, la bienvenida
+ * crea su hogar personal.
  */
 export function RegisterPage() {
   const [params] = useSearchParams()
@@ -48,7 +50,7 @@ export function RegisterPage() {
       email: email.trim(),
       password,
       options: {
-        data: { display_name: name.trim(), invite_code: code },
+        data: { display_name: name.trim(), ...(code ? { invite_code: code } : {}) },
         // Tras confirmar, a /entrar: el cliente no lee sesiones de la URL (detectSessionInUrl).
         emailRedirectTo: `${window.location.origin}/entrar`,
       },
@@ -67,9 +69,7 @@ export function RegisterPage() {
       <header className="flex flex-col gap-2">
         <Brand size="lg" />
         <h1 className="text-2xl font-semibold tracking-tight text-balance">Crea tu cuenta</h1>
-        <p className="text-fg-muted">
-          Solo con el código de invitación que te dio alguien del hogar.
-        </p>
+        <p className="text-fg-muted">Con Google o con tu email y una contraseña.</p>
       </header>
 
       {checkEmail ? (
@@ -81,7 +81,7 @@ export function RegisterPage() {
             />
             <span>
               Te enviamos un correo a <strong className="font-semibold">{checkEmail}</strong>.
-              Confírmalo y entra: te uniremos al hogar con tu código.
+              Confírmalo y entra.
             </span>
           </p>
           <Link
@@ -92,91 +92,97 @@ export function RegisterPage() {
           </Link>
         </div>
       ) : (
-        <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
-          {error && <ErrorState message={error} />}
-          <Field
-            label="Código de invitación"
-            hint="Lo genera quien creó el hogar, en Ajustes."
-            error={errors.code?.message}
-          >
-            {({ id, describedBy, invalid }) => (
-              <TextInput
-                id={id}
-                autoComplete="off"
-                autoCapitalize="characters"
-                spellCheck={false}
-                className="tabular font-semibold tracking-[0.2em] uppercase"
-                aria-describedby={describedBy}
-                aria-invalid={invalid}
-                {...register('code')}
-              />
-            )}
-          </Field>
-          <Field label="Tu nombre" error={errors.name?.message}>
-            {({ id, describedBy, invalid }) => (
-              <TextInput
-                id={id}
-                autoComplete="given-name"
-                maxLength={60}
-                aria-describedby={describedBy}
-                aria-invalid={invalid}
-                {...register('name')}
-              />
-            )}
-          </Field>
-          <Field label="Email" error={errors.email?.message}>
-            {({ id, describedBy, invalid }) => (
-              <TextInput
-                id={id}
-                type="email"
-                autoComplete="email"
-                inputMode="email"
-                autoCapitalize="none"
-                spellCheck={false}
-                aria-describedby={describedBy}
-                aria-invalid={invalid}
-                {...register('email')}
-              />
-            )}
-          </Field>
-          <Field
-            label="Contraseña"
-            hint="Mínimo 8 caracteres, con letras y números."
-            error={errors.password?.message}
-          >
-            {({ id, describedBy, invalid }) => (
-              <TextInput
-                id={id}
-                type="password"
-                autoComplete="new-password"
-                aria-describedby={describedBy}
-                aria-invalid={invalid}
-                {...register('password')}
-              />
-            )}
-          </Field>
-          <Field label="Repítela" error={errors.confirm?.message}>
-            {({ id, describedBy, invalid }) => (
-              <TextInput
-                id={id}
-                type="password"
-                autoComplete="new-password"
-                aria-describedby={describedBy}
-                aria-invalid={invalid}
-                {...register('confirm')}
-              />
-            )}
-          </Field>
-          <Button type="submit" size="lg" loading={isSubmitting} className="mt-2">
-            {isSubmitting ? 'Creando cuenta' : 'Crear cuenta'}
-          </Button>
-          <p className="text-center text-sm text-fg-muted">
-            ¿Ya tienes cuenta?{' '}
-            <Link to="/entrar" className="font-medium text-fg underline hover:text-primary">
-              Entra
-            </Link>
+        <>
+          <GoogleButton label="Registrarme con Google" />
+          <p className="flex items-center gap-3 text-sm text-fg-muted before:h-px before:flex-1 before:bg-line after:h-px after:flex-1 after:bg-line">
+            o con tu email
           </p>
-        </form>
+          <form onSubmit={onSubmit} noValidate className="-mt-4 flex flex-col gap-4">
+            {error && <ErrorState message={error} />}
+            <Field
+              label="Código de invitación (opcional)"
+              hint="Solo si alguien te invitó a su hogar."
+              error={errors.code?.message}
+            >
+              {({ id, describedBy, invalid }) => (
+                <TextInput
+                  id={id}
+                  autoComplete="off"
+                  autoCapitalize="characters"
+                  spellCheck={false}
+                  className="tabular font-semibold tracking-[0.2em] uppercase"
+                  aria-describedby={describedBy}
+                  aria-invalid={invalid}
+                  {...register('code')}
+                />
+              )}
+            </Field>
+            <Field label="Tu nombre" error={errors.name?.message}>
+              {({ id, describedBy, invalid }) => (
+                <TextInput
+                  id={id}
+                  autoComplete="given-name"
+                  maxLength={60}
+                  aria-describedby={describedBy}
+                  aria-invalid={invalid}
+                  {...register('name')}
+                />
+              )}
+            </Field>
+            <Field label="Email" error={errors.email?.message}>
+              {({ id, describedBy, invalid }) => (
+                <TextInput
+                  id={id}
+                  type="email"
+                  autoComplete="email"
+                  inputMode="email"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  aria-describedby={describedBy}
+                  aria-invalid={invalid}
+                  {...register('email')}
+                />
+              )}
+            </Field>
+            <Field
+              label="Contraseña"
+              hint="Mínimo 8 caracteres, con letras y números."
+              error={errors.password?.message}
+            >
+              {({ id, describedBy, invalid }) => (
+                <TextInput
+                  id={id}
+                  type="password"
+                  autoComplete="new-password"
+                  aria-describedby={describedBy}
+                  aria-invalid={invalid}
+                  {...register('password')}
+                />
+              )}
+            </Field>
+            <Field label="Repítela" error={errors.confirm?.message}>
+              {({ id, describedBy, invalid }) => (
+                <TextInput
+                  id={id}
+                  type="password"
+                  autoComplete="new-password"
+                  aria-describedby={describedBy}
+                  aria-invalid={invalid}
+                  {...register('confirm')}
+                />
+              )}
+            </Field>
+            <Button type="submit" size="lg" loading={isSubmitting} className="mt-2">
+              {isSubmitting ? 'Creando cuenta' : 'Crear cuenta'}
+            </Button>
+            <p className="text-center text-sm text-fg-muted">
+              ¿Ya tienes cuenta?{' '}
+              <Link to="/entrar" className="font-medium text-fg underline hover:text-primary">
+                Entra
+              </Link>
+            </p>
+          </form>
+        </>
       )}
     </main>
   )

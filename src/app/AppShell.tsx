@@ -2,6 +2,7 @@ import type { ComponentType } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router'
 import {
   BookOpenIcon,
+  CalendarCheckIcon,
   ChartPieIcon,
   GearSixIcon,
   ListBulletsIcon,
@@ -21,6 +22,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { to: '/', label: 'Inicio', icon: BookOpenIcon, end: true },
+  { to: '/plan', label: 'Mi plan', icon: CalendarCheckIcon },
   { to: '/movimientos', label: 'Movimientos', icon: ListBulletsIcon },
   { to: '/presupuestos', label: 'Presupuestos', icon: WalletIcon },
   { to: '/reportes', label: 'Reportes', icon: ChartPieIcon },

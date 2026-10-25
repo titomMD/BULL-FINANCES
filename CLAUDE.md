@@ -26,8 +26,12 @@
   `auth.uid()` → `household_members` → `household_id`.
 - Auth simplificada (decidido 2026-10-12): login/logout con email + contraseña, sesión
   persistente, rutas protegidas y recuperación de contraseña por email (`/recuperar` →
-  `/restablecer`). Registro solo con código de invitación (`/registro`), exigido por el hook
-  `public.hook_before_user_created` de Supabase Auth.
+  `/restablecer`). Registro abierto (`/registro`, email o Google; 2026-10-25, versión personal):
+  el hook `public.hook_before_user_created` solo rechaza un código de invitación escrito que no
+  sea válido. Sin código, `/bienvenida` crea el hogar personal «Mis finanzas». Plan del mes
+  (`plan_items`, `calculations/plan.ts`, `/plan`): privado por RLS, fuera de los cálculos del hogar.
+  Excel: `lib/exportXlsx.ts` con `write-excel-file/universal` (sin Web Workers: la CSP solo permite
+  scripts propios).
 - Ninguna service key / secret key / password de Postgres en el frontend ni en variables
   `VITE_*`. En el cliente solo va la publishable (anon) key.
 - Tests de RLS con pgTAP en `supabase/tests/database/`. Rápido sin Docker: `npm run test:db`;
@@ -99,7 +103,8 @@ enviadas`, acumulado entre meses. Quién pagó un gasto no importa. Solo si el s
   react-hook-form. Añadidas con justificación: @hookform/resolvers (puente Zod ↔ RHF),
   @phosphor-icons/react (iconos: la spec pide icono por tipo/categoría y las skills prohíben
   emoji o SVG a mano), vitest (tests del motor financiero), PGlite + pgtap (tests de BD sin Docker),
-  @fontsource-variable/{geist,manrope,ibm-plex-sans,atkinson-hyperlegible-next} (tipografías
+  write-excel-file (exportar .xlsx real; 70 kB, una sola dependencia propia: fflate; se carga solo
+  al pulsar «Excel»), @fontsource-variable/{geist,manrope,ibm-plex-sans,atkinson-hyperlegible-next} (tipografías
   elegibles en Apariencia, autoalojadas porque la CSP solo permite fuentes propias).
 - Estructura del Inicio: "Libro diario" (ver `.impeccable/surfaces/`). Producto: `PRODUCT.md`.
   Sistema visual: `DESIGN.md`.

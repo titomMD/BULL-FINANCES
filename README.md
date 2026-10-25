@@ -37,7 +37,9 @@ npm run format:check         # Prettier
 - **Movimientos**: historial con búsqueda y filtros por periodo, tipo, categoría y persona.
 - **Recurrentes**: plantillas mensuales/trimestrales que aparecen en Inicio cuando vencen.
 - **Reportes**: totales, aportes vs. lo que correspondía, ingresos, categorías y evolución mensual.
-- **Ajustes**: perfil, contraseña, hogar e invitación, categorías y exportación CSV/JSON.
+- **Mi plan** (`/plan`): ingresos, gastos fijos y ahorro de cada mes; lo que sobra es «Dinero mío». Privado.
+- **Ajustes**: perfil, contraseña, hogar e invitación, categorías y exportación Excel/CSV/JSON.
+- **Entrar con Google**: ver [`docs/GOOGLE_LOGIN.md`](./docs/GOOGLE_LOGIN.md).
 - Los movimientos no se borran: se anulan y quedan en el historial.
 
 ## Supabase

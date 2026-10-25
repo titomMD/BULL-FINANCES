@@ -822,6 +822,75 @@ export type Database = {
           },
         ]
       }
+      plan_items: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          currency: string
+          ends_on: string | null
+          group_name: string | null
+          household_id: string
+          id: string
+          kind: string
+          name: string
+          sort_order: number
+          starts_on: string | null
+          updated_at: string
+          updated_by: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          ends_on?: string | null
+          group_name?: string | null
+          household_id: string
+          id?: string
+          kind: string
+          name: string
+          sort_order?: number
+          starts_on?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          user_id?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          ends_on?: string | null
+          group_name?: string | null
+          household_id?: string
+          id?: string
+          kind?: string
+          name?: string
+          sort_order?: number
+          starts_on?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'plan_items_household_id_fkey'
+            columns: ['household_id']
+            isOneToOne: false
+            referencedRelation: 'households'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'plan_items_household_id_user_id_fkey'
+            columns: ['household_id', 'user_id']
+            isOneToOne: false
+            referencedRelation: 'household_members'
+            referencedColumns: ['household_id', 'user_id']
+          },
+        ]
+      }
       profiles: {
         Row: {
           accent: string

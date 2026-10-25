@@ -24,6 +24,8 @@ import { toUserMessage } from '../../lib/errors'
 import { currentAppearance, fonts, modes, themes } from '../../lib/appearance'
 import { usePreferences } from '../../hooks/usePreferences'
 import { buildExport, downloadFile } from '../../lib/export'
+import { buildXlsxSheets, downloadXlsx } from '../../lib/exportXlsx'
+import { monthOf } from '../../lib/calculations/plan'
 import { newPasswordSchema, type NewPasswordValues } from '../../lib/validation/password'
 import { supabase } from '../../lib/supabase/client'
 import {
@@ -35,6 +37,8 @@ import {
   updateDisplayName,
 } from '../../services/household'
 import { fetchRecurring } from '../../services/recurring'
+import { fetchMyPersonalMovements } from '../../services/personal'
+import { fetchMyPlan } from '../../services/plan'
 import { Button } from '../../components/ui/Button'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { Field, TextInput } from '../../components/ui/Field'
@@ -305,7 +309,7 @@ function ExportButtons() {
   const toast = useToast()
   const [busy, setBusy] = useState(false)
 
-  const run = async (format: 'json' | 'csv') => {
+  const run = async (format: 'json' | 'csv' | 'xlsx') => {
     setBusy(true)
     try {
       const recurring = await fetchRecurring(data.household.id)
@@ -319,7 +323,22 @@ function ExportButtons() {
         exportedAt,
       })
       const stamp = toBogotaDay(exportedAt)
-      if (format === 'json') {
+      if (format === 'xlsx') {
+        const [plan, personal] = await Promise.all([
+          fetchMyPlan(data.household.id),
+          fetchMyPersonalMovements(data.household.id),
+        ])
+        await downloadXlsx(
+          `mis-finanzas-${stamp}.xlsx`,
+          buildXlsxSheets({
+            tables: result.tables,
+            plan,
+            personal,
+            categories: data.categories,
+            month: monthOf(stamp),
+          }),
+        )
+      } else if (format === 'json') {
         downloadFile(`bullmilton-${stamp}.json`, result.json, 'application/json')
       } else {
         for (const [name, content] of Object.entries(result.csv))
@@ -336,8 +355,16 @@ function ExportButtons() {
   return (
     <div className="flex flex-wrap gap-2">
       <Button
-        variant="secondary"
+        variant="primary"
         loading={busy}
+        onClick={() => run('xlsx')}
+        icon={<DownloadSimpleIcon aria-hidden="true" className="size-4" weight="bold" />}
+      >
+        Excel (.xlsx)
+      </Button>
+      <Button
+        variant="secondary"
+        disabled={busy}
         onClick={() => run('json')}
         icon={<DownloadSimpleIcon aria-hidden="true" className="size-4" weight="bold" />}
       >
@@ -487,7 +514,7 @@ export function SettingsPage() {
 
       <Section
         title="Exportar"
-        description="Descarga todo como respaldo: gastos, ingresos, transferencias, categorías y recurrentes."
+        description="Descarga todo: tu plan del mes, tu dinero personal y los movimientos del hogar. El Excel trae una hoja por tema."
       >
         <ExportButtons />
       </Section>
