@@ -8,9 +8,11 @@ import {
   GearSixIcon,
   ListBulletsIcon,
   WalletIcon,
+  LockSimpleIcon,
   type IconProps,
 } from '@phosphor-icons/react'
 import { QuickActions } from '../components/QuickActions'
+import { useSolo } from '../hooks/useSolo'
 import { useHousehold } from './household-context'
 import { Brand } from '../components/Brand'
 
@@ -21,13 +23,23 @@ interface NavItem {
   end?: boolean
 }
 
-const navItems: NavItem[] = [
+const sharedNav: NavItem[] = [
   { to: '/', label: 'Inicio', icon: BookOpenIcon, end: true },
   { to: '/plan', label: 'Mi plan', icon: CalendarCheckIcon },
   { to: '/tarjetas', label: 'Tarjetas', icon: CreditCardIcon },
   { to: '/movimientos', label: 'Movimientos', icon: ListBulletsIcon },
   { to: '/presupuestos', label: 'Presupuestos', icon: WalletIcon },
   { to: '/reportes', label: 'Reportes', icon: ChartPieIcon },
+  { to: '/ajustes', label: 'Ajustes', icon: GearSixIcon },
+]
+
+// Solo tú: no hay movimientos del hogar ni reportes compartidos; tu dinero personal es el libro.
+const soloNav: NavItem[] = [
+  { to: '/', label: 'Inicio', icon: BookOpenIcon, end: true },
+  { to: '/plan', label: 'Mi plan', icon: CalendarCheckIcon },
+  { to: '/tarjetas', label: 'Tarjetas', icon: CreditCardIcon },
+  { to: '/personal', label: 'Mi dinero', icon: LockSimpleIcon },
+  { to: '/presupuestos', label: 'Presupuestos', icon: WalletIcon },
   { to: '/ajustes', label: 'Ajustes', icon: GearSixIcon },
 ]
 
@@ -83,6 +95,7 @@ function TabLink({ item }: { item: NavItem }) {
 export function AppShell() {
   const { household, me } = useHousehold()
   const { pathname } = useLocation()
+  const navItems = useSolo() ? soloNav : sharedNav
   // En móvil, la barra inferior solo vive en las pestañas principales; formularios y detalles
   // tienen su botón de volver y su botón de guardar en la zona del pulgar.
   const onTab = navItems.some((item) => item.to === pathname)

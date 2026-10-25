@@ -7,6 +7,7 @@ import { formatDay } from '../../lib/dates'
 import { formatMoney } from '../../lib/money'
 import { CardIcon } from '../../components/debts/CardIcon'
 import { ButtonLink } from '../../components/ui/Button'
+import { DollarBox } from '../../components/debts/DollarBox'
 import { Page, PageHeader } from '../../components/ui/PageHeader'
 import { EmptyState, ErrorState, LedgerSkeleton } from '../../components/ui/States'
 
@@ -35,6 +36,7 @@ export function DebtsPage() {
           </ButtonLink>
         }
       />
+      <DollarBox />
       {accounts.loading || statements.loading ? (
         <LedgerSkeleton days={1} />
       ) : accounts.error && !accounts.data ? (

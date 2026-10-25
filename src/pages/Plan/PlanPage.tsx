@@ -10,7 +10,8 @@ import {
 } from '@phosphor-icons/react'
 import { useHousehold } from '../../app/household-context'
 import { usePersonalMoney } from '../../hooks/usePersonalMoney'
-import { useDebtAccounts, useDebtStatements } from '../../hooks/useDebts'
+import { useDebtAccounts, useDebtPayments, useDebtStatements } from '../../hooks/useDebts'
+import { useDollar } from '../../hooks/useDollar'
 import { usePlan, usePlanChecks, usePlanEntries } from '../../hooks/usePlan'
 import { usePlanSync } from '../../hooks/usePlanSync'
 import { invalidateData } from '../../hooks/useResource'
@@ -100,6 +101,8 @@ export function PlanPage() {
   const checks = usePlanChecks()
   const entries = usePlanEntries()
   const statements = useDebtStatements()
+  const payments = useDebtPayments()
+  const { rate } = useDollar()
   const accounts = useDebtAccounts()
   const personal = usePersonalMoney()
   const toast = useToast()
@@ -115,8 +118,10 @@ export function PlanPage() {
         entries.data ?? [],
         statements.data ?? [],
         month,
+        payments.data ?? [],
+        rate?.cents ?? null,
       ),
-    [plan.data, checks.data, entries.data, statements.data, month],
+    [plan.data, checks.data, entries.data, statements.data, payments.data, rate?.cents, month],
   )
   const summary = progress.summary
   const monthDay = `${month}-01`

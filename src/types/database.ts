@@ -827,6 +827,7 @@ export type Database = {
       }
       debt_accounts: {
         Row: {
+          fee_plan_item_id: string | null
           archived_at: string | null
           cut_day: number | null
           due_day: number | null
@@ -843,6 +844,7 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          fee_plan_item_id?: string | null
           archived_at?: string | null
           cut_day?: number | null
           due_day?: number | null
@@ -859,6 +861,7 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          fee_plan_item_id?: string | null
           archived_at?: string | null
           cut_day?: number | null
           due_day?: number | null
@@ -891,8 +894,166 @@ export type Database = {
           },
         ]
       }
+      debt_card_expenses: {
+        Row: {
+          account_id: string
+          amount: number
+          currency: string
+          description: string
+          expense_date: string
+          fx_rate_cents: number | null
+          household_id: string
+          id: string
+          user_id: string
+          created_at: string
+          created_by: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          account_id: string
+          amount: number
+          currency?: string
+          description: string
+          expense_date?: string
+          fx_rate_cents?: number | null
+          household_id: string
+          id?: string
+          user_id?: string
+          created_at?: string
+          created_by?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          account_id?: string
+          amount?: number
+          currency?: string
+          description?: string
+          expense_date?: string
+          fx_rate_cents?: number | null
+          household_id?: string
+          id?: string
+          user_id?: string
+          created_at?: string
+          created_by?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'debt_card_expenses_household_id_fkey'
+            columns: ['household_id']
+            isOneToOne: false
+            referencedRelation: 'households'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'debt_card_expenses_household_id_user_id_fkey'
+            columns: ['household_id', 'user_id']
+            isOneToOne: false
+            referencedRelation: 'household_members'
+            referencedColumns: ['household_id', 'user_id']
+          },
+          {
+            foreignKeyName: 'debt_card_expenses_account_id_user_id_fkey'
+            columns: ['account_id', 'user_id']
+            isOneToOne: false
+            referencedRelation: 'debt_accounts'
+            referencedColumns: ['id', 'user_id']
+          },
+        ]
+      }
+      debt_payments: {
+        Row: {
+          account_id: string
+          amount: number
+          currency: string
+          fx_rate_cents: number | null
+          household_id: string
+          id: string
+          kind: string
+          note: string | null
+          paid_on: string
+          statement_id: string | null
+          user_id: string
+          created_at: string
+          created_by: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          account_id: string
+          amount: number
+          currency?: string
+          fx_rate_cents?: number | null
+          household_id: string
+          id?: string
+          kind?: string
+          note?: string | null
+          paid_on?: string
+          statement_id?: string | null
+          user_id?: string
+          created_at?: string
+          created_by?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          account_id?: string
+          amount?: number
+          currency?: string
+          fx_rate_cents?: number | null
+          household_id?: string
+          id?: string
+          kind?: string
+          note?: string | null
+          paid_on?: string
+          statement_id?: string | null
+          user_id?: string
+          created_at?: string
+          created_by?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'debt_payments_household_id_fkey'
+            columns: ['household_id']
+            isOneToOne: false
+            referencedRelation: 'households'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'debt_payments_household_id_user_id_fkey'
+            columns: ['household_id', 'user_id']
+            isOneToOne: false
+            referencedRelation: 'household_members'
+            referencedColumns: ['household_id', 'user_id']
+          },
+          {
+            foreignKeyName: 'debt_payments_account_id_user_id_fkey'
+            columns: ['account_id', 'user_id']
+            isOneToOne: false
+            referencedRelation: 'debt_accounts'
+            referencedColumns: ['id', 'user_id']
+          },
+          {
+            foreignKeyName: 'debt_payments_statement_id_fkey'
+            columns: ['statement_id']
+            isOneToOne: false
+            referencedRelation: 'debt_statements'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       debt_statements: {
         Row: {
+          usd_total_due: number
+          usd_minimum_due: number
+          usd_paid: number
+          fee_amount: number | null
+          monthly_rate_ppm: number | null
           account_id: string
           due_date: string | null
           file_name: string | null
@@ -917,6 +1078,11 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          usd_total_due?: number
+          usd_minimum_due?: number
+          usd_paid?: number
+          fee_amount?: number | null
+          monthly_rate_ppm?: number | null
           account_id: string
           due_date?: string | null
           file_name?: string | null
@@ -941,6 +1107,11 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          usd_total_due?: number
+          usd_minimum_due?: number
+          usd_paid?: number
+          fee_amount?: number | null
+          monthly_rate_ppm?: number | null
           account_id?: string
           due_date?: string | null
           file_name?: string | null
@@ -990,6 +1161,7 @@ export type Database = {
       }
       plan_checks: {
         Row: {
+          paid_amount: number | null
           household_id: string
           id: string
           month: string
@@ -1001,6 +1173,7 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          paid_amount?: number | null
           household_id: string
           id?: string
           month: string
@@ -1012,6 +1185,7 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          paid_amount?: number | null
           household_id?: string
           id?: string
           month?: string

@@ -15,6 +15,13 @@ export interface ImportedStatement {
   previousBalance?: number
   interest?: number
   purchases?: number
+  /** Cuenta en dólares (centavos). */
+  usdTotalDue?: number
+  usdMinimumDue?: number
+  /** Cuota de manejo cobrada (COP). */
+  feeAmount?: number
+  /** Tasa mensual vencida en millonésimas (2,1593 % = 21593). */
+  monthlyRatePpm?: number
   notes?: string
   lines?: StatementLine[]
 }

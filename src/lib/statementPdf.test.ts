@@ -66,7 +66,8 @@ describe('parseBancolombiaStatement', () => {
       { date: '2026-08-20', detail: 'FARMACIA', amount: 66_000 },
     ])
     expect(r.notes).toContain('Millas acumuladas: 10.50')
-    expect(r.notes).toContain('US$ 65,00')
+    expect(r.usdTotalDue).toBe(6_500)
+    expect(r.usdMinimumDue).toBe(300)
   })
 
   it('lee el formato empresarial', () => {
@@ -90,5 +91,20 @@ describe('parseBancolombiaStatement', () => {
 
   it('devuelve null con un PDF que no es un extracto conocido', () => {
     expect(parseBancolombiaStatement(['Factura de luz', 'Total $ 50.000'])).toBeNull()
+  })
+})
+
+describe('cuota de manejo y tasa', () => {
+  it('lee la tasa mensual de las columnas del extracto empresarial', () => {
+    expect(parseBancolombiaStatement(business)!.monthlyRatePpm).toBe(21_593)
+  })
+  it('suma la cuota de manejo cargada como movimiento', () => {
+    const lines = [...personal]
+    lines.splice(
+      lines.findIndex((l) => l.includes('FARMACIA')),
+      0,
+      '000000 15/09/2026 CUOTA DE MANEJO $ 17.250,00 1/1 $ 17.250,00 0,0000 % 00,0000 % $ 0,00',
+    )
+    expect(parseBancolombiaStatement(lines)!.feeAmount).toBe(17_250)
   })
 })

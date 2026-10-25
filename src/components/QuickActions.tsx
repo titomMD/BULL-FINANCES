@@ -1,16 +1,27 @@
 import { ArrowsLeftRightIcon, PlusIcon } from '@phosphor-icons/react'
 import { Link } from 'react-router'
+import { useSolo } from '../hooks/useSolo'
 
 // Acciones rápidas (spec §17 / §36): + Gasto / + Ingreso / + Transferencia, siempre a mano.
 // Gasto es la acción principal (amarillo); las otras dos, secundarias.
 
-const actions = [
+const sharedActions = [
   { to: '/gastos/nuevo', label: 'Gasto', primary: true },
   { to: '/ingresos/nuevo', label: 'Ingreso', primary: false },
   { to: '/transferencias/nueva', label: 'Transferencia', primary: false },
 ] as const
 
+// Sin nadie con quien compartir, Gasto e Ingreso van directo a tu dinero personal.
+const soloActions = [
+  { to: '/personal/gastos/nuevo', label: 'Gasto', primary: true },
+  { to: '/personal/ingresos/nuevo', label: 'Ingreso', primary: false },
+] as const
+
 export function QuickActions({ layout }: { layout: 'row' | 'stack' }) {
+  const solo = useSolo()
+  const actions: ReadonlyArray<{ to: string; label: string; primary: boolean }> = solo
+    ? soloActions
+    : sharedActions
   return (
     <nav
       aria-label="Registrar"
@@ -18,7 +29,7 @@ export function QuickActions({ layout }: { layout: 'row' | 'stack' }) {
         // Con texto grande la fila no cabe: por debajo de 20rem el icono pasa arriba de la
         // etiqueta (consulta de contenedor en rem, así sigue al tamaño de texto elegido).
         layout === 'row'
-          ? '@container grid grid-cols-[1.15fr_1fr_1.3fr] gap-2'
+          ? `@container grid ${solo ? 'grid-cols-2' : 'grid-cols-[1.15fr_1fr_1.3fr]'} gap-2`
           : 'flex flex-col gap-2'
       }
     >

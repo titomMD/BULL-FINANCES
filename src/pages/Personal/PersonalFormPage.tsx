@@ -1,20 +1,25 @@
+import { useState } from 'react'
 import { useParams } from 'react-router'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useHousehold } from '../../app/household-context'
+import { useDebtAccounts } from '../../hooks/useDebts'
+import { useDollar } from '../../hooks/useDollar'
 import { useGoBack } from '../../hooks/useGoBack'
 import { usePersonalMoney } from '../../hooks/usePersonalMoney'
 import { invalidateData } from '../../hooks/useResource'
 import { todayBogota } from '../../lib/dates'
 import { toUserMessage } from '../../lib/errors'
 import { formatMoneyInput, parseMoneyInput } from '../../lib/money'
+import { parseUsdInput } from '../../lib/usd'
 import { personalSchema, type PersonalFormValues } from '../../lib/validation/movements'
+import { createCardExpense } from '../../services/debts'
 import {
   createPersonalMovement,
   updatePersonalMovement,
   voidPersonalMovement,
 } from '../../services/personal'
-import type { PersonalMovement } from '../../types/domain'
+import type { DebtCurrency, PersonalMovement } from '../../types/domain'
 import { CategoryPicker } from '../../components/forms/CategoryPicker'
 import { DateChips } from '../../components/forms/DateChips'
 import { AuditNote, FormFooter, VoidSection, VoidedNotice } from '../../components/forms/FormParts'
@@ -22,7 +27,7 @@ import { MoneyInput } from '../../components/forms/MoneyInput'
 import { NoteField } from '../../components/forms/NoteField'
 import { useSavedToast } from '../../components/forms/useSavedToast'
 import { Button } from '../../components/ui/Button'
-import { Field, TextInput } from '../../components/ui/Field'
+import { Field, Select, TextInput } from '../../components/ui/Field'
 import { Page, PageHeader } from '../../components/ui/PageHeader'
 import { EmptyState, ErrorState, LedgerSkeleton } from '../../components/ui/States'
 import { useToast } from '../../components/ui/toast-context'
@@ -60,6 +65,15 @@ function PersonalForm({ kind, movement }: { kind: Kind; movement?: PersonalMovem
   const planRow = Boolean(movement?.planMonth)
   const readOnly = movement?.status === 'voided' || planRow
   const text = copy[kind]
+  const accounts = useDebtAccounts()
+  const { rate } = useDollar()
+  const cards = (accounts.data ?? []).filter((card) => !card.archivedAt)
+  // Un gasto con tarjeta no baja tu dinero personal: queda en esa tarjeta hasta que la pagues.
+  const canUseCard = kind === 'expense' && !movement && cards.length > 0
+  const [payWith, setPayWith] = useState('')
+  const [cardCurrency, setCardCurrency] = useState<DebtCurrency>('COP')
+  const [usd, setUsd] = useState('')
+  const useUsd = canUseCard && payWith !== '' && cardCurrency === 'USD'
 
   const categories = data.categories.filter(
     (category) =>
@@ -69,6 +83,7 @@ function PersonalForm({ kind, movement }: { kind: Kind; movement?: PersonalMovem
   const {
     register,
     control,
+    getValues,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<PersonalFormValues>({
@@ -84,7 +99,27 @@ function PersonalForm({ kind, movement }: { kind: Kind; movement?: PersonalMovem
       : { description: '', amount: '', date: todayBogota(), categoryId: '', notes: '' },
   })
 
-  const onSubmit = handleSubmit(async (values) => {
+  const saveCardExpense = async (values: PersonalFormValues, usdText: string | null) => {
+    const amount = usdText === null ? parseMoneyInput(values.amount) : parseUsdInput(usdText)
+    if (!amount) return toast.show('Escribe cuánto fue.', 'error')
+    try {
+      await createCardExpense(data.household.id, payWith, {
+        expenseDate: values.date,
+        description: values.description,
+        currency: usdText === null ? 'COP' : 'USD',
+        amount,
+        fxRateCents: usdText === null ? null : (rate?.cents ?? null),
+      })
+      invalidateData()
+      toast.show('Gasto guardado en la tarjeta')
+      goBack()
+    } catch (error) {
+      toast.show(toUserMessage(error, 'No pudimos guardarlo. Inténtalo de nuevo.'), 'error')
+    }
+  }
+
+  const submitCop = handleSubmit(async (values) => {
+    if (canUseCard && payWith) return saveCardExpense(values, null)
     const input = {
       description: values.description,
       amount: parseMoneyInput(values.amount)!,
@@ -113,6 +148,15 @@ function PersonalForm({ kind, movement }: { kind: Kind; movement?: PersonalMovem
     }
   })
 
+  // En dólares el valor no es de pesos: se valida aparte, sin pasar por el campo de pesos.
+  const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    if (!useUsd) return submitCop(event)
+    event.preventDefault()
+    const values = getValues()
+    if (!values.description.trim()) return toast.show('Cuéntanos en qué fue el gasto.', 'error')
+    return saveCardExpense(values, usd)
+  }
+
   return (
     <form onSubmit={onSubmit} noValidate className="flex flex-col gap-6">
       {planRow && (
@@ -124,24 +168,73 @@ function PersonalForm({ kind, movement }: { kind: Kind; movement?: PersonalMovem
       {readOnly && !planRow && <VoidedNotice label={text.noun} />}
       {!movement && <p className="text-sm text-fg-muted">{text.intro}</p>}
       <fieldset disabled={readOnly || isSubmitting} className="flex flex-col gap-6">
-        <Controller
-          control={control}
-          name="amount"
-          render={({ field }) => (
-            <Field label={text.amount} error={errors.amount?.message}>
-              {({ id, describedBy, invalid }) => (
-                <MoneyInput
-                  id={id}
-                  size="lg"
-                  autoFocus={!movement}
-                  aria-describedby={describedBy}
-                  aria-invalid={invalid}
-                  {...field}
-                />
+        {useUsd ? (
+          <Field label="¿Cuántos dólares fueron?">
+            {({ id }) => (
+              <TextInput
+                id={id}
+                inputMode="decimal"
+                placeholder="15,99"
+                autoFocus
+                value={usd}
+                onChange={(e) => setUsd(e.target.value.replace(/[^\d.,]/g, ''))}
+              />
+            )}
+          </Field>
+        ) : (
+          <Controller
+            control={control}
+            name="amount"
+            render={({ field }) => (
+              <Field label={text.amount} error={errors.amount?.message}>
+                {({ id, describedBy, invalid }) => (
+                  <MoneyInput
+                    id={id}
+                    size="lg"
+                    autoFocus={!movement}
+                    aria-describedby={describedBy}
+                    aria-invalid={invalid}
+                    {...field}
+                  />
+                )}
+              </Field>
+            )}
+          />
+        )}
+        {canUseCard && (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field
+              label="¿Con qué pagaste?"
+              hint="Con tarjeta, no baja tu dinero hasta que la pagues."
+            >
+              {({ id }) => (
+                <Select id={id} value={payWith} onChange={(e) => setPayWith(e.target.value)}>
+                  <option value="">Mi dinero personal</option>
+                  {cards.map((card) => (
+                    <option key={card.id} value={card.id}>
+                      {card.name}
+                      {card.last4 ? ` ••••${card.last4}` : ''}
+                    </option>
+                  ))}
+                </Select>
               )}
             </Field>
-          )}
-        />
+            {payWith && (
+              <Field label="¿En qué moneda?">
+                {({ id }) => (
+                  <Select
+                    id={id}
+                    value={cardCurrency}
+                    onChange={(e) => setCardCurrency(e.target.value as DebtCurrency)}
+                  >
+                    <option value="COP">Pesos (COP)</option>
+                    <option value="USD">Dólares (USD)</option>
+                  </Select>
+                )}
+              </Field>
+            )}
+          </div>
+        )}
         <Controller
           control={control}
           name="date"

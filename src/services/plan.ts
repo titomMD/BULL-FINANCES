@@ -94,18 +94,44 @@ export async function fetchMyChecks(householdId: string): Promise<PlanCheck[]> {
   const rows = unwrap(
     await supabase
       .from('plan_checks')
-      .select('id, plan_item_id, month')
+      .select('id, plan_item_id, month, paid_amount')
       .eq('household_id', householdId),
   )
-  return rows.map((row) => ({ id: row.id, planItemId: row.plan_item_id, month: row.month }))
+  return rows.map((row) => ({
+    id: row.id,
+    planItemId: row.plan_item_id,
+    month: row.month,
+    paidAmount: row.paid_amount,
+  }))
 }
 
-export async function markPaid(householdId: string, itemId: string, month: string): Promise<void> {
+export async function markPaid(
+  householdId: string,
+  itemId: string,
+  month: string,
+  paidAmount: number | null = null,
+): Promise<void> {
   const result = await supabase
     .from('plan_checks')
-    .insert({ household_id: householdId, plan_item_id: itemId, month })
+    .insert({ household_id: householdId, plan_item_id: itemId, month, paid_amount: paidAmount })
   // Ya estaba marcado (dos toques seguidos): no es un error.
   if (result.error && result.error.code !== '23505') throw result.error
+}
+
+/**
+ * Marca una línea como pagada con el valor realmente cobrado (p. ej. la cuota de manejo del
+ * extracto). Si ya estaba marcada, se reemplaza para guardar el valor nuevo.
+ */
+export async function setPaidAmount(
+  householdId: string,
+  itemId: string,
+  month: string,
+  paidAmount: number,
+): Promise<void> {
+  assertOk(
+    await supabase.from('plan_checks').delete().eq('plan_item_id', itemId).eq('month', month),
+  )
+  await markPaid(householdId, itemId, month, paidAmount)
 }
 
 export async function unmarkPaid(checkId: string): Promise<void> {

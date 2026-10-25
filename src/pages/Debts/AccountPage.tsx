@@ -1,19 +1,29 @@
-import { useState } from 'react'
 import { useParams } from 'react-router'
-import { NotePencilIcon, PlusIcon } from '@phosphor-icons/react'
+import { NotePencilIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react'
 import { useHousehold } from '../../app/household-context'
-import { useDebtAccounts, useDebtStatements } from '../../hooks/useDebts'
+import {
+  useCardExpenses,
+  useDebtAccounts,
+  useDebtPayments,
+  useDebtStatements,
+} from '../../hooks/useDebts'
 import { invalidateData } from '../../hooks/useResource'
+import { nextCutDate } from '../../lib/calculations/cards'
+import { expensesSinceCut } from '../../lib/calculations/cards'
 import { formatDay, formatMonthName, todayBogota } from '../../lib/dates'
 import { toUserMessage } from '../../lib/errors'
-import { formatMoney, parseMoneyInput } from '../../lib/money'
-import { setStatementPayment } from '../../services/debts'
-import type { DebtStatement } from '../../types/domain'
+import { formatMoney } from '../../lib/money'
+import { formatUsd } from '../../lib/usd'
+import { deletePayment } from '../../services/debts'
+import type { DebtPayment, DebtStatement } from '../../types/domain'
 import { cardImageFor } from '../../lib/cardImages'
 import { CardArt } from '../../components/debts/CardArt'
 import { StoredFile } from '../../components/debts/StoredFile'
-import { MoneyInput } from '../../components/forms/MoneyInput'
-import { Button, ButtonLink } from '../../components/ui/Button'
+import { CardExpenses } from '../../components/debts/CardExpenses'
+import { CardPayments } from '../../components/debts/CardPayments'
+import { DollarBox } from '../../components/debts/DollarBox'
+import { InterestPanel } from '../../components/debts/InterestPanel'
+import { ButtonLink } from '../../components/ui/Button'
 import { Page, PageHeader } from '../../components/ui/PageHeader'
 import { EmptyState, ErrorState, LedgerSkeleton } from '../../components/ui/States'
 import { useToast } from '../../components/ui/toast-context'
@@ -29,69 +39,52 @@ function Row({ label, value }: { label: string; value: string }) {
   )
 }
 
-function Payment({ statement }: { statement: DebtStatement }) {
+function PaymentHistory({ payments }: { payments: DebtPayment[] }) {
   const toast = useToast()
-  const [amount, setAmount] = useState('')
-  const [busy, setBusy] = useState(false)
-  const pending = Math.max(0, statement.totalDue - statement.paidAmount)
-
-  const save = async (paid: number) => {
-    setBusy(true)
-    try {
-      await setStatementPayment(statement.id, paid, paid > 0 ? todayBogota() : null)
-      invalidateData()
-      setAmount('')
-      toast.show('Pago guardado')
-    } catch (error) {
-      toast.show(toUserMessage(error, 'No pudimos guardar el pago.'), 'error')
-    } finally {
-      setBusy(false)
-    }
-  }
-
+  if (payments.length === 0) return null
   return (
-    <div className="flex flex-col gap-3 rounded-xl bg-surface-2/50 p-3">
-      <p data-money className="text-sm">
-        {pending === 0 && statement.totalDue > 0 ? (
-          <>
-            Pagado completo
-            {statement.paidOn ? ` el ${formatDay(statement.paidOn)}` : ''}.
-          </>
-        ) : (
-          <>
-            Pagado{' '}
-            <span className="tabular font-semibold">{formatMoney(statement.paidAmount)}</span>
-            {' · '}falta <span className="tabular font-semibold">{formatMoney(pending)}</span>
-          </>
-        )}
-      </p>
-      <div className="flex flex-wrap items-end gap-2">
-        <div className="min-w-40 flex-1">
-          <MoneyInput
-            aria-label="Cuánto pagaste en total de este extracto"
-            placeholder="Total pagado"
-            value={amount}
-            onChange={setAmount}
-          />
-        </div>
-        <Button
-          variant="secondary"
-          loading={busy}
-          onClick={() => {
-            const value = parseMoneyInput(amount)
-            if (value === null) return toast.show('Escribe cuánto pagaste.', 'error')
-            void save(value)
-          }}
-        >
-          Guardar pago
-        </Button>
-        {pending > 0 && (
-          <Button loading={busy} onClick={() => save(statement.totalDue)}>
-            Pagar todo
-          </Button>
-        )}
-      </div>
-    </div>
+    <section className="flex flex-col gap-1 rounded-2xl bg-surface px-4 py-3 sm:px-5">
+      <h3 className="font-semibold">Pagos registrados</h3>
+      <ul className="divide-y divide-line">
+        {payments.map((payment) => (
+          <li key={payment.id} className="flex items-center justify-between gap-3 py-2">
+            <span className="flex flex-col">
+              <span className="font-medium">
+                {payment.kind === 'minimum'
+                  ? 'Pago mínimo'
+                  : payment.kind === 'full'
+                    ? 'Pago total'
+                    : 'Abono'}{' '}
+                · {payment.currency === 'USD' ? 'dólares' : 'pesos'}
+              </span>
+              <span className="text-xs text-fg-muted">{formatDay(payment.paidOn)}</span>
+            </span>
+            <span className="flex items-center gap-2">
+              <span className="tabular font-semibold">
+                {payment.currency === 'USD'
+                  ? formatUsd(payment.amount)
+                  : formatMoney(payment.amount)}
+              </span>
+              <button
+                type="button"
+                aria-label="Borrar este pago"
+                className="inline-flex size-11 items-center justify-center rounded-full text-fg-muted hover:bg-surface-2"
+                onClick={async () => {
+                  try {
+                    await deletePayment(payment.id)
+                    invalidateData()
+                  } catch (error) {
+                    toast.show(toUserMessage(error), 'error')
+                  }
+                }}
+              >
+                <TrashIcon aria-hidden="true" className="size-5" />
+              </button>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }
 
@@ -115,6 +108,15 @@ function StatementCard({ statement, accountId }: { statement: DebtStatement; acc
           <dl className="divide-y divide-line">
             <Row label="Total a pagar" value={formatMoney(statement.totalDue)} />
             <Row label="Pago mínimo" value={formatMoney(statement.minimumDue)} />
+            {statement.usdTotalDue > 0 && (
+              <Row
+                label="En dólares (total / mínimo)"
+                value={`${formatUsd(statement.usdTotalDue)} / ${formatUsd(statement.usdMinimumDue)}`}
+              />
+            )}
+            {statement.feeAmount !== null && (
+              <Row label="Cuota de manejo" value={formatMoney(statement.feeAmount)} />
+            )}
             {statement.dueDate && <Row label="Fecha límite" value={formatDay(statement.dueDate)} />}
             {statement.previousBalance !== null && (
               <Row label="Saldo anterior" value={formatMoney(statement.previousBalance)} />
@@ -126,7 +128,11 @@ function StatementCard({ statement, accountId }: { statement: DebtStatement; acc
               <Row label="Intereses" value={formatMoney(statement.interest)} />
             )}
           </dl>
-          <Payment statement={statement} />
+          <p data-money className="text-sm">
+            Pagado {formatMoney(statement.paidAmount)}
+            {statement.usdPaid > 0 ? ` y ${formatUsd(statement.usdPaid)}` : ''}
+            {statement.paidOn ? ` · último pago ${formatDay(statement.paidOn)}` : ''}
+          </p>
           {statement.notes && <p className="text-sm whitespace-pre-line">{statement.notes}</p>}
           {statement.lines.length > 0 && (
             <div className="overflow-x-auto">
@@ -178,8 +184,20 @@ export function AccountPage() {
   useHousehold()
   const accounts = useDebtAccounts()
   const statements = useDebtStatements()
+  const payments = useDebtPayments()
+  const cardExpenses = useCardExpenses()
   const account = accounts.data?.find((entry) => entry.id === id)
   const mine = (statements.data ?? []).filter((statement) => statement.accountId === id)
+  const myPayments = (payments.data ?? []).filter((payment) => payment.accountId === id)
+  const latest = mine[0]
+  const today = todayBogota()
+  const lastCut = latest?.statementDate ?? null
+  const myExpenses = expensesSinceCut(
+    (cardExpenses.data ?? []).filter((expense) => expense.accountId === id),
+    lastCut,
+  )
+  const until = nextCutDate(today, account?.cutDay ?? null, lastCut ?? undefined)
+  const pendingCop = latest ? Math.max(0, latest.totalDue - latest.paidAmount) : 0
 
   return (
     <Page>
@@ -227,6 +245,25 @@ export function AccountPage() {
               {account.notes}
             </p>
           )}
+          <DollarBox />
+          {latest && (
+            <section className="flex flex-col gap-3">
+              <h2 className="font-semibold">
+                Extracto del {formatDay(latest.statementDate)} · se paga en{' '}
+                {monthTitle(latest.payMonth)}
+              </h2>
+              <CardPayments statement={latest} accountId={account.id} until={until} />
+              <InterestPanel
+                balance={pendingCop}
+                ratePpm={latest.monthlyRatePpm}
+                today={today}
+                until={until}
+                extras={myPayments.filter((payment) => payment.kind === 'extra')}
+              />
+            </section>
+          )}
+          <CardExpenses accountId={account.id} expenses={myExpenses} since={lastCut} />
+          <PaymentHistory payments={myPayments} />
           <div className="flex items-center justify-between gap-3">
             <h2 className="font-semibold">Extractos</h2>
             <ButtonLink

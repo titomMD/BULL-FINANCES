@@ -44,6 +44,35 @@ function amount(raw: string, style: 'A' | 'B'): number {
   return negative ? -value : value
 }
 
+/** «65,00» (A) → 6500 centavos. */
+function cents(raw: string): number {
+  const negative = raw.includes('-')
+  const value = Number(raw.replace(/\D/g, '')) || 0
+  return negative ? -value : value
+}
+
+/** Cuota de manejo: suma de los movimientos que la nombran (el banco la carga como un cargo). */
+function feeFrom(movements: StatementLine[] | undefined): number | undefined {
+  const fees = (movements ?? []).filter((m) => /cuota\s+(de\s+)?manejo/i.test(m.detail))
+  return fees.length ? fees.reduce((total, m) => total + Math.abs(m.amount), 0) : undefined
+}
+
+/** Tasa mensual vencida («2.1593 % M.V.» o «M.V. 2,1593») → millonésimas (21593). */
+function monthlyRateFrom(lines: string[]): number | undefined {
+  for (const line of lines) {
+    const hit =
+      /(\d{1,2}[.,]\d{2,4})\s*%?\s*(?:M\.?\s?V\.?|MV|mensual vencid)/i.exec(line) ??
+      /(?:M\.?\s?V\.?|MV)\s*[:=]?\s*(\d{1,2}[.,]\d{2,4})/i.exec(line) ??
+      // Columnas de cada movimiento: «2,1593 29,2215» = tasa M.V. y E.A.
+      /(\d{1,2}[.,]\d{4})\s*%?\s+(\d{1,2}[.,]\d{4})\s*%?(?!\d)/.exec(line)
+    if (hit) {
+      const percent = Number(hit[1].replace(',', '.'))
+      if (percent > 0 && percent < 10) return Math.round(percent * 10000)
+    }
+  }
+  return undefined
+}
+
 const slashDate = (raw: string) => {
   const [d, m, y] = raw.split('/')
   return `${y}-${m}-${d}`
@@ -121,11 +150,8 @@ function parseA(lines: string[]): ParsedPdfStatement | null {
   }
 
   if (result.totalDue === undefined || !result.statementDate) return null
-  if (dollars.total) {
-    notes.push(
-      `Además en dólares: pago total US$ ${dollars.total.replace('.', '')}${dollars.min ? `, mínimo US$ ${dollars.min}` : ''} (no está en el total en pesos).`,
-    )
-  }
+  if (dollars.total) result.usdTotalDue = Math.max(0, cents(dollars.total))
+  if (dollars.min) result.usdMinimumDue = Math.max(0, cents(dollars.min))
   if (notes.length) result.notes = notes.join(' · ')
   result.lines = movements
   if (result.dueDate) result.payMonth = result.dueDate.slice(0, 7)
@@ -216,7 +242,14 @@ function parseB(lines: string[]): ParsedPdfStatement | null {
 /** Null si el texto no parece un extracto de Bancolombia que sepamos leer. */
 export function parseBancolombiaStatement(lines: string[]): ParsedPdfStatement | null {
   const text = lines.join('\n')
-  if (/Informaci[oó]n de la Tarjeta\s*\*\d{4}/i.test(text)) return parseA(lines)
-  if (/Resumen Saldo Total/i.test(text) && /TARJETA:\s*\*+\d{4}/i.test(text)) return parseB(lines)
-  return null
+  let result: ParsedPdfStatement | null = null
+  if (/Informaci[oó]n de la Tarjeta\s*\*\d{4}/i.test(text)) result = parseA(lines)
+  else if (/Resumen Saldo Total/i.test(text) && /TARJETA:\s*\*+\d{4}/i.test(text))
+    result = parseB(lines)
+  if (!result) return null
+  const fee = feeFrom(result.lines)
+  if (fee !== undefined) result.feeAmount = fee
+  const rate = monthlyRateFrom(lines)
+  if (rate !== undefined) result.monthlyRatePpm = rate
+  return result
 }

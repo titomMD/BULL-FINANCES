@@ -39,7 +39,12 @@ import {
 import { fetchRecurring } from '../../services/recurring'
 import { fetchMyPersonalMovements } from '../../services/personal'
 import { fetchMyEntries, fetchMyPlan } from '../../services/plan'
-import { fetchMyAccounts, fetchMyStatements } from '../../services/debts'
+import {
+  fetchMyAccounts,
+  fetchMyCardExpenses,
+  fetchMyPayments,
+  fetchMyStatements,
+} from '../../services/debts'
 import { Button } from '../../components/ui/Button'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { Field, TextInput } from '../../components/ui/Field'
@@ -325,13 +330,16 @@ function ExportButtons() {
       })
       const stamp = toBogotaDay(exportedAt)
       if (format === 'xlsx') {
-        const [plan, personal, entries, accounts, statements] = await Promise.all([
-          fetchMyPlan(data.household.id),
-          fetchMyPersonalMovements(data.household.id),
-          fetchMyEntries(data.household.id),
-          fetchMyAccounts(data.household.id),
-          fetchMyStatements(data.household.id),
-        ])
+        const [plan, personal, entries, accounts, statements, payments, cardExpenses] =
+          await Promise.all([
+            fetchMyPlan(data.household.id),
+            fetchMyPersonalMovements(data.household.id),
+            fetchMyEntries(data.household.id),
+            fetchMyAccounts(data.household.id),
+            fetchMyStatements(data.household.id),
+            fetchMyPayments(data.household.id),
+            fetchMyCardExpenses(data.household.id),
+          ])
         await downloadXlsx(
           `freyapp-${stamp}.xlsx`,
           buildXlsxSheets({
@@ -341,6 +349,8 @@ function ExportButtons() {
             entries,
             accounts,
             statements,
+            payments,
+            cardExpenses,
             categories: data.categories,
             month: monthOf(stamp),
           }),

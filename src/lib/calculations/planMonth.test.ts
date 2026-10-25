@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import type { DebtStatement, PlanCheck, PlanEntry, PlanItem } from '../../types/domain'
-import { monthProgress, planBuckets, defaultPayMonth } from './planMonth'
+import type { DebtPayment, DebtStatement, PlanCheck, PlanEntry, PlanItem } from '../../types/domain'
+import { usdToCop } from './cards'
+import { debtProgress, monthProgress, planBuckets, defaultPayMonth } from './planMonth'
 
 const item = (over: Partial<PlanItem>): PlanItem => ({
   id: 'x',
@@ -47,6 +48,11 @@ const statement = (over: Partial<DebtStatement>): DebtStatement => ({
   purchases: null,
   paidAmount: 0,
   paidOn: null,
+  usdTotalDue: 0,
+  usdMinimumDue: 0,
+  usdPaid: 0,
+  feeAmount: null,
+  monthlyRatePpm: null,
   notes: null,
   lines: [],
   filePath: null,
@@ -64,7 +70,7 @@ describe('monthProgress', () => {
   })
 
   it('marcar pagado suma a lo pagado del grupo', () => {
-    const checks: PlanCheck[] = [{ id: 'c', planItemId: 'ic', month: '2026-10' }]
+    const checks: PlanCheck[] = [{ id: 'c', planItemId: 'ic', month: '2026-10', paidAmount: null }]
     const p = monthProgress(plan, checks, [], [], '2026-10')
     const group = p.groups.find((g) => g.name === 'Membresías')!
     expect(group.spent).toBe(21_000)
@@ -73,7 +79,7 @@ describe('monthProgress', () => {
   })
 
   it('una marca de otro mes no cuenta', () => {
-    const checks: PlanCheck[] = [{ id: 'c', planItemId: 'gym', month: '2026-09' }]
+    const checks: PlanCheck[] = [{ id: 'c', planItemId: 'gym', month: '2026-09', paidAmount: null }]
     expect(monthProgress(plan, checks, [], [], '2026-10').fixedPaid).toBe(0)
   })
 
@@ -145,5 +151,46 @@ describe('defaultPayMonth', () => {
   it('usa la fecha límite y, si no hay, el corte', () => {
     expect(defaultPayMonth('2026-10-28', '2026-11-12')).toBe('2026-11')
     expect(defaultPayMonth('2026-10-28', null)).toBe('2026-10')
+  })
+})
+
+describe('cuota de manejo y dólares', () => {
+  it('una marca con valor distinto cuenta lo realmente pagado', () => {
+    const checks: PlanCheck[] = [
+      { id: 'c', planItemId: 'ic', month: '2026-10', paidAmount: 17_250 },
+    ]
+    const p = monthProgress(plan, checks, [], [], '2026-10')
+    expect(p.groups.find((g) => g.name === 'Membresías')!.spent).toBe(17_250)
+  })
+
+  it('la cuota de manejo no cuenta como pago ni como deuda de la tarjeta', () => {
+    const s = statement({
+      totalDue: 500_000,
+      minimumDue: 60_000,
+      paidAmount: 60_000,
+      feeAmount: 17_250,
+    })
+    const d = debtProgress([s], 1_200_000, '2026-10')
+    expect(d.paid).toBe(42_750)
+    expect(d.due).toBe(482_750)
+    expect(d.minimum).toBe(42_750)
+  })
+
+  it('los dólares pagados cuentan en pesos con la tasa de cada pago', () => {
+    const s = statement({ usdTotalDue: 6_500, usdMinimumDue: 300, usdPaid: 300 })
+    const pay: DebtPayment = {
+      id: 'p',
+      accountId: 'a',
+      statementId: 's',
+      currency: 'USD',
+      amount: 300,
+      kind: 'minimum',
+      paidOn: '2026-10-05',
+      fxRateCents: 390_000,
+      note: null,
+    }
+    const d = debtProgress([s], 0, '2026-10', [pay], 400_000)
+    expect(d.paid).toBe(11_700)
+    expect(d.pending).toBe(500_000 + usdToCop(6_200, 400_000))
   })
 })

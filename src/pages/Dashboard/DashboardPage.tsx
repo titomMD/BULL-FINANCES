@@ -2,6 +2,8 @@ import { useMemo } from 'react'
 import { Link } from 'react-router'
 import { CaretRightIcon, NotebookIcon } from '@phosphor-icons/react'
 import { useHousehold } from '../../app/household-context'
+import { useSolo } from '../../hooks/useSolo'
+import { SoloHome } from './SoloHome'
 import { availableSummary, buildAvailableLedger } from '../../lib/calculations/available'
 import { annotateLedger, limitEntries } from '../../lib/calculations/ledger'
 import { summarizePeriod } from '../../lib/calculations/reports'
@@ -22,7 +24,7 @@ const LEDGER_ROWS = 8
  * Inicio: el saldo disponible de cada uno y el libro diario
  * (dirección "Libro diario", ver .impeccable/surfaces).
  */
-export function DashboardPage() {
+function SharedDashboard() {
   const data = useHousehold()
   const { movements, members, userId } = data
   const today = todayBogota()
@@ -95,4 +97,8 @@ export function DashboardPage() {
       </div>
     </div>
   )
+}
+
+export function DashboardPage() {
+  return useSolo() ? <SoloHome /> : <SharedDashboard />
 }

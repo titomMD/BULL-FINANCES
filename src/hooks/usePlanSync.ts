@@ -4,7 +4,8 @@ import { monthProgress } from '../lib/calculations/planMonth'
 import { monthOf } from '../lib/calculations/plan'
 import { todayBogota } from '../lib/dates'
 import { syncPlanIncome } from '../services/personal'
-import { useDebtStatements } from './useDebts'
+import { useDebtPayments, useDebtStatements } from './useDebts'
+import { useDollar } from './useDollar'
 import { invalidateData } from './useResource'
 import { usePersonalMoney } from './usePersonalMoney'
 import { usePlan, usePlanChecks, usePlanEntries } from './usePlan'
@@ -20,17 +21,27 @@ export function usePlanSync() {
   const checks = usePlanChecks()
   const entries = usePlanEntries()
   const statements = useDebtStatements()
+  const payments = useDebtPayments()
+  const { rate } = useDollar()
   const personal = usePersonalMoney()
   const lastKey = useRef('')
 
   const month = monthOf(todayBogota())
   const ready = Boolean(
-    plan.data && checks.data && entries.data && statements.data && personal.data,
+    plan.data && checks.data && entries.data && statements.data && payments.data && personal.data,
   )
 
   const target = useMemo(() => {
     if (!ready) return null
-    const progress = monthProgress(plan.data!, checks.data!, entries.data!, statements.data!, month)
+    const progress = monthProgress(
+      plan.data!,
+      checks.data!,
+      entries.data!,
+      statements.data!,
+      month,
+      payments.data!,
+      rate?.cents ?? null,
+    )
     const existing = personal.data!.find(
       (movement) => movement.planMonth === month && movement.status === 'active',
     )
@@ -38,7 +49,17 @@ export function usePlanSync() {
       amount: plan.data!.length === 0 ? 0 : progress.money,
       existing: existing ? { id: existing.id, amount: existing.amount } : undefined,
     }
-  }, [ready, plan.data, checks.data, entries.data, statements.data, personal.data, month])
+  }, [
+    ready,
+    plan.data,
+    checks.data,
+    entries.data,
+    statements.data,
+    payments.data,
+    rate?.cents,
+    personal.data,
+    month,
+  ])
 
   useEffect(() => {
     if (!target) return

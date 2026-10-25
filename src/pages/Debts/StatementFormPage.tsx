@@ -7,6 +7,7 @@ import { defaultPayMonth } from '../../lib/calculations/planMonth'
 import { todayBogota } from '../../lib/dates'
 import { toUserMessage } from '../../lib/errors'
 import { formatMoneyInput, parseMoneyInput } from '../../lib/money'
+import { formatUsd, parseUsdInput } from '../../lib/usd'
 import { PdfPasswordError, readPdfLines } from '../../lib/pdfLines'
 import { parseBancolombiaStatement } from '../../lib/statementPdf'
 import { parseStatementPaste, type ImportedStatement } from '../../lib/statementImport'
@@ -17,6 +18,7 @@ import {
   updateStatement,
   uploadFile,
 } from '../../services/debts'
+import { setPaidAmount } from '../../services/plan'
 import type { DebtAccount, DebtStatement, StatementLine } from '../../types/domain'
 import { FilePicker } from '../../components/debts/FilePicker'
 import { FormFooter } from '../../components/forms/FormParts'
@@ -60,7 +62,13 @@ function StatementForm({
   const [previousBalance, setPreviousBalance] = useState(money(statement?.previousBalance ?? null))
   const [purchases, setPurchases] = useState(money(statement?.purchases ?? null))
   const [interest, setInterest] = useState(money(statement?.interest ?? null))
-  const [paidAmount, setPaidAmount] = useState(money(statement?.paidAmount ?? 0))
+  const usdText = (cents: number | null) => (cents ? formatUsd(cents).replace('US$ ', '') : '')
+  const [usdTotal, setUsdTotal] = useState(usdText(statement?.usdTotalDue ?? null))
+  const [usdMinimum, setUsdMinimum] = useState(usdText(statement?.usdMinimumDue ?? null))
+  const [feeAmount, setFeeAmount] = useState(money(statement?.feeAmount ?? null))
+  const [ratePercent, setRatePercent] = useState(
+    statement?.monthlyRatePpm ? String(statement.monthlyRatePpm / 10000).replace('.', ',') : '',
+  )
   const [notes, setNotes] = useState(statement?.notes ?? '')
   const [linesText, setLinesText] = useState(statement ? linesToText(statement.lines) : '')
   const [pasted, setPasted] = useState('')
@@ -135,6 +143,11 @@ function StatementForm({
     if (parsed.previousBalance !== undefined) setPreviousBalance(money(parsed.previousBalance))
     if (parsed.purchases !== undefined) setPurchases(money(parsed.purchases))
     if (parsed.interest !== undefined) setInterest(money(parsed.interest))
+    if (parsed.usdTotalDue !== undefined) setUsdTotal(usdText(parsed.usdTotalDue))
+    if (parsed.usdMinimumDue !== undefined) setUsdMinimum(usdText(parsed.usdMinimumDue))
+    if (parsed.feeAmount !== undefined) setFeeAmount(money(parsed.feeAmount))
+    if (parsed.monthlyRatePpm !== undefined)
+      setRatePercent(String(parsed.monthlyRatePpm / 10000).replace('.', ','))
     if (parsed.notes) setNotes(parsed.notes)
     if (parsed.lines) setLinesText(linesToText(parsed.lines))
   }
@@ -156,7 +169,8 @@ function StatementForm({
         fileName = file.name.slice(0, 200)
         if (previous) await removeFile(previous).catch(() => {})
       }
-      const paid = optional(paidAmount) ?? 0
+      const rate = Number(ratePercent.replace(',', '.'))
+      const fee = optional(feeAmount)
       const input = {
         statementDate,
         dueDate: dueDate || null,
@@ -166,8 +180,10 @@ function StatementForm({
         previousBalance: optional(previousBalance),
         interest: optional(interest),
         purchases: optional(purchases),
-        paidAmount: paid,
-        paidOn: paid > 0 ? (statement?.paidOn ?? today) : null,
+        usdTotalDue: usdTotal.trim() ? (parseUsdInput(usdTotal) ?? 0) : 0,
+        usdMinimumDue: usdMinimum.trim() ? (parseUsdInput(usdMinimum) ?? 0) : 0,
+        feeAmount: fee,
+        monthlyRatePpm: rate > 0 && rate < 10 ? Math.round(rate * 10000) : null,
         notes,
         lines: parseStatementPaste(linesText)?.lines ?? [],
         filePath,
@@ -175,6 +191,10 @@ function StatementForm({
       }
       if (statement) await updateStatement(statement.id, input)
       else await createStatement(household.id, accountId, input)
+      // La cuota de manejo se descuenta de la línea del plan (Membresías) y queda pagada ese mes,
+      // aunque el valor del extracto no coincida con el del plan.
+      if (account.feePlanItemId && fee && fee > 0)
+        await setPaidAmount(household.id, account.feePlanItemId, payMonth, fee)
       invalidateData()
       toast.show(statement ? 'Cambios guardados' : 'Extracto guardado')
       navigate(back, { replace: true })
@@ -310,8 +330,48 @@ function StatementForm({
           <Field label="Pago mínimo (opcional)">
             {({ id }) => <MoneyInput id={id} value={minimumDue} onChange={setMinimumDue} />}
           </Field>
-          <Field label="Ya pagado de este extracto">
-            {({ id }) => <MoneyInput id={id} value={paidAmount} onChange={setPaidAmount} />}
+          <Field
+            label="Cuota de manejo (opcional)"
+            hint={
+              account.feePlanItemId
+                ? 'Se descuenta de tu plan y queda marcada como pagada ese mes.'
+                : 'Enlaza la línea de tu plan en «Editar tarjeta» para descontarla.'
+            }
+          >
+            {({ id }) => <MoneyInput id={id} value={feeAmount} onChange={setFeeAmount} />}
+          </Field>
+          <Field label="Tasa mensual % (opcional)" hint="Para calcular intereses día a día.">
+            {({ id }) => (
+              <TextInput
+                id={id}
+                inputMode="decimal"
+                placeholder="2,1593"
+                value={ratePercent}
+                onChange={(e) => setRatePercent(e.target.value.replace(/[^\d.,]/g, ''))}
+              />
+            )}
+          </Field>
+          <Field label="Total en dólares (opcional)" hint="Lo que se paga aparte, en dólares.">
+            {({ id }) => (
+              <TextInput
+                id={id}
+                inputMode="decimal"
+                placeholder="65,00"
+                value={usdTotal}
+                onChange={(e) => setUsdTotal(e.target.value.replace(/[^\d.,]/g, ''))}
+              />
+            )}
+          </Field>
+          <Field label="Mínimo en dólares (opcional)">
+            {({ id }) => (
+              <TextInput
+                id={id}
+                inputMode="decimal"
+                placeholder="3,00"
+                value={usdMinimum}
+                onChange={(e) => setUsdMinimum(e.target.value.replace(/[^\d.,]/g, ''))}
+              />
+            )}
           </Field>
           <Field label="Saldo anterior (opcional)">
             {({ id }) => (

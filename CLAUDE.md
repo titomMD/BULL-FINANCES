@@ -39,6 +39,13 @@
   (gasolina, pagos de tarjeta) se descuenta de «Dinero mío». Rutas `/tarjetas/...`.
   Excel: `lib/exportXlsx.ts` con `write-excel-file/universal` (sin Web Workers: la CSP solo permite
   scripts propios).
+  v5 (2026-10-25): modo solo (`hooks/useSolo.ts`: con un solo miembro activo, Inicio = dinero personal,
+  sin Transferencia); tarjetas con pesos y dólares por separado (`debt_payments`, trigger
+  `private.sync_statement_paid` mantiene `paid_amount`/`usd_paid`; dólares en centavos, tasa = pesos por
+  dólar × 100), gastos con tarjeta (`debt_card_expenses`), cuota de manejo (`debt_statements.fee_amount`,
+  `debt_accounts.fee_plan_item_id`, `plan_checks.paid_amount`), intereses estimados en
+  `calculations/cards.ts` (tasa mensual ÷ 30). Dólar del día: `lib/fx.ts` (open.er-api.com y TRM de
+  datos.gov.co; la CSP lista ambos en `connect-src`; Google no ofrece API pública).
 - Ninguna service key / secret key / password de Postgres en el frontend ni en variables
   `VITE_*`. En el cliente solo va la publishable (anon) key.
 - Tests de RLS con pgTAP en `supabase/tests/database/`. Rápido sin Docker: `npm run test:db`;

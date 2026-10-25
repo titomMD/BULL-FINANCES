@@ -5,7 +5,8 @@
 //   · lo que se pase de un tope se descuenta de «Dinero mío»
 // Todo entero en COP. Los meses son 'YYYY-MM'.
 
-import type { DebtStatement, PlanCheck, PlanEntry, PlanItem } from '../../types/domain'
+import type { DebtPayment, DebtStatement, PlanCheck, PlanEntry, PlanItem } from '../../types/domain'
+import { usdToCop } from './cards'
 import { monthOf, planSummary, type Month, type PlanSummary } from './plan'
 
 export interface ItemProgress {
@@ -70,26 +71,52 @@ export function itemProgress(
   entries: PlanEntry[],
 ): ItemProgress {
   const mine = entries.filter((entry) => entry.planItemId === item.id && inMonth(entry, month))
-  const paid = checks.some((check) => check.planItemId === item.id && check.month === month)
-  const spent = item.tracked ? sum(mine.map((entry) => entry.amount)) : paid ? item.amount : 0
+  const check = checks.find((c) => c.planItemId === item.id && c.month === month)
+  const paid = check !== undefined
+  // Una línea marcada cuenta lo realmente pagado (p. ej. cuota de manejo 17.250 en vez de 18.000).
+  const spent = item.tracked
+    ? sum(mine.map((entry) => entry.amount))
+    : check
+      ? (check.paidAmount ?? item.amount)
+      : 0
   const remaining = item.amount - spent
   // Una línea marcada como pagada nunca "se pasa": se pagó lo planeado.
   const over = item.tracked ? Math.max(0, spent - item.amount) : 0
   return { item, paid, spent, remaining, over, entries: mine }
 }
 
+/**
+ * Pagos de tarjetas del mes. Pesos y dólares van aparte en cada extracto; aquí todo se expresa en
+ * pesos (los dólares con la tasa de cada pago, o `fxCents` si no la trae). La cuota de manejo ya
+ * se descuenta de Membresías, así que no cuenta como pago de deuda ni como deuda pendiente.
+ */
 export function debtProgress(
   statements: DebtStatement[],
   planned: number,
   month: Month,
+  payments: DebtPayment[] = [],
+  fxCents: number | null = null,
 ): DebtProgress {
   const mine = statements.filter((statement) => statement.payMonth === month)
-  const paid = sum(mine.map((statement) => statement.paidAmount))
-  const due = sum(mine.map((statement) => statement.totalDue))
-  const minimum = sum(mine.map((statement) => statement.minimumDue))
-  const pending = sum(
-    mine.map((statement) => Math.max(0, statement.totalDue - statement.paidAmount)),
+  const ids = new Set(mine.map((statement) => statement.id))
+  const usdPaidAsCop = sum(
+    payments
+      .filter((p) => p.currency === 'USD' && p.statementId !== null && ids.has(p.statementId))
+      .map((p) => usdToCop(p.amount, p.fxRateCents ?? fxCents ?? 0)),
   )
+  const rate = fxCents ?? 0
+  const fee = (statement: DebtStatement) => statement.feeAmount ?? 0
+  const feeCovered = sum(mine.map((s) => Math.min(fee(s), s.paidAmount)))
+  const paid = sum(mine.map((statement) => statement.paidAmount)) - feeCovered + usdPaidAsCop
+  const due =
+    sum(mine.map((s) => Math.max(0, s.totalDue - fee(s)))) +
+    sum(mine.map((s) => usdToCop(s.usdTotalDue, rate)))
+  const minimum =
+    sum(mine.map((s) => Math.max(0, s.minimumDue - fee(s)))) +
+    sum(mine.map((s) => usdToCop(s.usdMinimumDue, rate)))
+  const pending =
+    sum(mine.map((s) => Math.max(0, s.totalDue - Math.max(s.paidAmount, fee(s))))) +
+    sum(mine.map((s) => usdToCop(Math.max(0, s.usdTotalDue - s.usdPaid), rate)))
   return {
     planned,
     paid,
@@ -108,6 +135,8 @@ export function monthProgress(
   entries: PlanEntry[],
   statements: DebtStatement[],
   month: Month,
+  payments: DebtPayment[] = [],
+  fxCents: number | null = null,
 ): MonthProgress {
   const summary = planSummary(items, month)
   const groups: GroupProgress[] = summary.expenseGroups.map((group) => {
@@ -121,7 +150,7 @@ export function monthProgress(
       items: progress,
     }
   })
-  const debt = debtProgress(statements, summary.totalSavings, month)
+  const debt = debtProgress(statements, summary.totalSavings, month, payments, fxCents)
   const trackedOver = sum(groups.flatMap((group) => group.items.map((entry) => entry.over)))
   const overspend = trackedOver + debt.over
   const fixedPaid = sum(groups.map((group) => Math.min(group.spent, group.planned)))

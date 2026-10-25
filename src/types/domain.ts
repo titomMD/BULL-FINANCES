@@ -196,6 +196,8 @@ export interface PlanCheck {
   planItemId: string
   /** 'YYYY-MM' */
   month: string
+  /** Lo realmente pagado, si difiere del monto del plan (p. ej. cuota de manejo). */
+  paidAmount: number | null
 }
 
 /** Un gasto registrado contra una línea del plan (una tanqueada, por ejemplo). */
@@ -218,6 +220,8 @@ export interface DebtAccount {
   /** Ruta de la imagen de la tarjeta en el almacenamiento privado. */
   imagePath: string | null
   archivedAt: string | null
+  /** Línea del plan (Membresías) donde se descuenta la cuota de manejo. */
+  feePlanItemId: string | null
 }
 
 /** Movimiento copiado de un extracto (solo para consultar). */
@@ -241,8 +245,43 @@ export interface DebtStatement {
   purchases: number | null
   paidAmount: number
   paidOn: string | null
+  /** Cuenta en dólares, en centavos. */
+  usdTotalDue: number
+  usdMinimumDue: number
+  usdPaid: number
+  /** Cuota de manejo cobrada (COP). */
+  feeAmount: number | null
+  /** Tasa mensual vencida en millonésimas (2,1593 % = 21593). */
+  monthlyRatePpm: number | null
   notes: string | null
   lines: StatementLine[]
   filePath: string | null
   fileName: string | null
+}
+
+export type DebtCurrency = 'COP' | 'USD'
+
+/** Pago a una tarjeta: pesos enteros o centavos de dólar, cada moneda por separado. */
+export interface DebtPayment {
+  id: string
+  accountId: string
+  statementId: string | null
+  currency: DebtCurrency
+  amount: number
+  kind: 'minimum' | 'extra' | 'full'
+  paidOn: string
+  /** Pesos por dólar × 100 (solo USD). */
+  fxRateCents: number | null
+  note: string | null
+}
+
+/** Gasto con la tarjeta que aún no sale en un extracto. */
+export interface DebtCardExpense {
+  id: string
+  accountId: string
+  expenseDate: string
+  description: string
+  currency: DebtCurrency
+  amount: number
+  fxRateCents: number | null
 }

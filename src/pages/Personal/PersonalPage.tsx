@@ -20,7 +20,7 @@ import { ButtonLink } from '../../components/ui/Button'
 import { Page, PageHeader } from '../../components/ui/PageHeader'
 import { EmptyState, ErrorState, LedgerSkeleton } from '../../components/ui/States'
 
-function PersonalRow({ movement }: { movement: PersonalMovement }) {
+export function PersonalRow({ movement }: { movement: PersonalMovement }) {
   const { categories } = useHousehold()
   const category = categories.find((item) => item.id === movement.categoryId)
   const voided = movement.status === 'voided'

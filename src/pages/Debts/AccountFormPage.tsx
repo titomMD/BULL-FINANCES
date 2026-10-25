@@ -3,6 +3,7 @@ import { useParams } from 'react-router'
 import { useNavigate } from 'react-router'
 import { useHousehold } from '../../app/household-context'
 import { useDebtAccounts } from '../../hooks/useDebts'
+import { usePlan } from '../../hooks/usePlan'
 import { invalidateData } from '../../hooks/useResource'
 import { toUserMessage } from '../../lib/errors'
 import {
@@ -17,7 +18,7 @@ import { FilePicker } from '../../components/debts/FilePicker'
 import { FormFooter } from '../../components/forms/FormParts'
 import { Button } from '../../components/ui/Button'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
-import { Field, TextArea, TextInput } from '../../components/ui/Field'
+import { Field, Select, TextArea, TextInput } from '../../components/ui/Field'
 import { Page, PageHeader } from '../../components/ui/PageHeader'
 import { EmptyState, LedgerSkeleton } from '../../components/ui/States'
 import { useToast } from '../../components/ui/toast-context'
@@ -36,6 +37,9 @@ function AccountForm({ account }: { account?: DebtAccount }) {
   const [cutDay, setCutDay] = useState(account?.cutDay ? String(account.cutDay) : '')
   const [dueDay, setDueDay] = useState(account?.dueDay ? String(account.dueDay) : '')
   const [notes, setNotes] = useState(account?.notes ?? '')
+  const [feeItem, setFeeItem] = useState(account?.feePlanItemId ?? '')
+  const plan = usePlan()
+  const expenseItems = (plan.data ?? []).filter((entry) => entry.kind === 'expense')
   const [image, setImage] = useState<File | null>(null)
   const [saving, setSaving] = useState(false)
   const [confirming, setConfirming] = useState(false)
@@ -62,6 +66,7 @@ function AccountForm({ account }: { account?: DebtAccount }) {
         dueDay: dayOrNull(dueDay),
         notes,
         imagePath,
+        feePlanItemId: feeItem || null,
       }
       const id = account
         ? (await updateAccount(account.id, input), account.id)
@@ -133,6 +138,22 @@ function AccountForm({ account }: { account?: DebtAccount }) {
             )}
           </Field>
         </div>
+        <Field
+          label="Cuota de manejo en tu plan (opcional)"
+          hint="Al guardar un extracto, su cuota de manejo se descuenta de esta línea y queda marcada como pagada ese mes."
+        >
+          {({ id }) => (
+            <Select id={id} value={feeItem} onChange={(e) => setFeeItem(e.target.value)}>
+              <option value="">Ninguna</option>
+              {expenseItems.map((entry) => (
+                <option key={entry.id} value={entry.id}>
+                  {entry.groupName ? `${entry.groupName} · ` : ''}
+                  {entry.name}
+                </option>
+              ))}
+            </Select>
+          )}
+        </Field>
         <FilePicker
           label="Foto de la tarjeta (opcional)"
           file={image}

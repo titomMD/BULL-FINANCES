@@ -4,6 +4,8 @@
 import type {
   Category,
   DebtAccount,
+  DebtCardExpense,
+  DebtPayment,
   DebtStatement,
   PersonalMovement,
   PlanEntry,
@@ -83,6 +85,8 @@ export interface XlsxInput {
   entries?: PlanEntry[]
   accounts?: DebtAccount[]
   statements?: DebtStatement[]
+  payments?: DebtPayment[]
+  cardExpenses?: DebtCardExpense[]
 }
 
 export function buildXlsxSheets(input: XlsxInput): SheetModel[] {
@@ -131,6 +135,11 @@ export function buildXlsxSheets(input: XlsxInput): SheetModel[] {
       'total',
       'minimo',
       'pagado',
+      'dolares_total_usd',
+      'dolares_minimo_usd',
+      'dolares_pagado_usd',
+      'cuota_manejo',
+      'tasa_mensual_pct',
       'nota',
     ],
     rows: (input.statements ?? []).map((s) => [
@@ -141,7 +150,34 @@ export function buildXlsxSheets(input: XlsxInput): SheetModel[] {
       s.totalDue,
       s.minimumDue,
       s.paidAmount,
+      s.usdTotalDue / 100,
+      s.usdMinimumDue / 100,
+      s.usdPaid / 100,
+      s.feeAmount ?? '',
+      s.monthlyRatePpm ? s.monthlyRatePpm / 10000 : '',
       s.notes,
+    ]),
+  }
+  const money = (currency: string, amount: number) => (currency === 'USD' ? amount / 100 : amount)
+  const payments: Table = {
+    headers: ['fecha', 'tarjeta', 'tipo', 'moneda', 'monto', 'tasa_cop_por_usd'],
+    rows: (input.payments ?? []).map((p) => [
+      p.paidOn,
+      accountName(p.accountId),
+      p.kind === 'minimum' ? 'minimo' : p.kind === 'full' ? 'total' : 'abono',
+      p.currency,
+      money(p.currency, p.amount),
+      p.fxRateCents ? p.fxRateCents / 100 : '',
+    ]),
+  }
+  const cardExpenses: Table = {
+    headers: ['fecha', 'tarjeta', 'detalle', 'moneda', 'monto'],
+    rows: (input.cardExpenses ?? []).map((e) => [
+      e.expenseDate,
+      accountName(e.accountId),
+      e.description,
+      e.currency,
+      money(e.currency, e.amount),
     ]),
   }
   const statementLines: Table = {
@@ -170,6 +206,8 @@ export function buildXlsxSheets(input: XlsxInput): SheetModel[] {
           fromTable('Movimientos de extractos', statementLines),
         ]
       : []),
+    ...(input.payments?.length ? [fromTable('Pagos de tarjetas', payments)] : []),
+    ...(input.cardExpenses?.length ? [fromTable('Gastos con tarjeta', cardExpenses)] : []),
     fromTable('Dinero personal', personal),
     ...household('gastos.csv', 'Gastos del hogar'),
     ...household('ingresos.csv', 'Ingresos del hogar'),

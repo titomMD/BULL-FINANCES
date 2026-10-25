@@ -2,7 +2,8 @@ import { Link } from 'react-router'
 import { CalendarCheckIcon, WarningCircleIcon } from '@phosphor-icons/react'
 import { useMemo } from 'react'
 import { usePersonalMoney } from '../../hooks/usePersonalMoney'
-import { useDebtStatements } from '../../hooks/useDebts'
+import { useDebtPayments, useDebtStatements } from '../../hooks/useDebts'
+import { useDollar } from '../../hooks/useDollar'
 import { usePlan, usePlanChecks, usePlanEntries } from '../../hooks/usePlan'
 import { usePlanSync } from '../../hooks/usePlanSync'
 import { monthOf } from '../../lib/calculations/plan'
@@ -22,6 +23,8 @@ export function PlanBuckets() {
   const checks = usePlanChecks()
   const entries = usePlanEntries()
   const statements = useDebtStatements()
+  const payments = useDebtPayments()
+  const { rate } = useDollar()
   const personal = usePersonalMoney()
   const today = todayBogota()
   const month = monthOf(today)
@@ -34,6 +37,8 @@ export function PlanBuckets() {
       entries.data ?? [],
       statements.data ?? [],
       month,
+      payments.data ?? [],
+      rate?.cents ?? null,
     )
     const spent = (personal.data ?? [])
       .filter(
@@ -45,7 +50,17 @@ export function PlanBuckets() {
       )
       .reduce((total, m) => total + m.amount, 0)
     return planBuckets(progress, spent)
-  }, [plan.data, checks.data, entries.data, statements.data, personal.data, month, today])
+  }, [
+    plan.data,
+    checks.data,
+    entries.data,
+    statements.data,
+    payments.data,
+    rate?.cents,
+    personal.data,
+    month,
+    today,
+  ])
 
   if (buckets.length === 0) return null
 
