@@ -1,0 +1,9 @@
+dist
+node_modules
+package-lock.json
+skills-lock.json
+.claude
+.agents
+SHAREDFIN_ESPECIFICACION_COMPLETA_CLAUDE_COLORES.md
+.impeccable
+supabase/.temp

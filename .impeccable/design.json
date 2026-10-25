@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-12T00:00:00Z",
+  "title": "Design System: BULLMILTON",
+  "extensions": {
+    "colorMeta": {
+      "canvas": { "role": "neutral", "displayName": "Deep Navy", "canonical": "#0b0f14", "tonalRamp": ["#05070a", "#0b0f14", "#151b22", "#202832", "#3a4552", "#64707e", "#a3acb7", "#e3e7eb"] },
+      "surface": { "role": "neutral", "displayName": "Dark Slate", "canonical": "#151b22", "tonalRamp": ["#0b0f14", "#151b22", "#202832", "#2c3540", "#46515e", "#6f7a87", "#a8b0ba", "#e4e7eb"] },
+      "surface-2": { "role": "neutral", "displayName": "Slate", "canonical": "#202832", "tonalRamp": ["#0e1318", "#151b22", "#202832", "#2e3742", "#4a5562", "#737e8b", "#abb3bd", "#e5e8ec"] },
+      "fg": { "role": "neutral", "displayName": "Soft White", "canonical": "#f3f4f6", "tonalRamp": ["#1f2226", "#3a3e44", "#585d64", "#7a8088", "#9ca3ab", "#c3c8ce", "#e2e5e9", "#f3f4f6"] },
+      "fg-muted": { "role": "neutral", "displayName": "Muted Gray", "canonical": "#9ca3af", "tonalRamp": ["#1d2026", "#353a42", "#525963", "#737b87", "#9ca3af", "#bcc1c9", "#dadde2", "#f1f2f4"] },
+      "primary": { "role": "primary", "displayName": "Finance Yellow", "canonical": "#f4c542", "tonalRamp": ["#2e2306", "#55410c", "#7f6213", "#a9831b", "#d4a527", "#f4c542", "#ffe58a", "#fff6d6"] },
+      "primary-soft": { "role": "primary", "displayName": "Soft Yellow", "canonical": "#ffe58a", "tonalRamp": ["#2e2306", "#55410c", "#7f6213", "#a9831b", "#d4a527", "#f4c542", "#ffe58a", "#fff6d6"] },
+      "on-primary": { "role": "neutral", "displayName": "On Primary (Deep Navy)", "canonical": "var(--color-canvas)" },
+      "positive": { "role": "secondary", "displayName": "Finance Green", "canonical": "#35c978", "tonalRamp": ["#08261a", "#123d2a", "#1a5c3d", "#227d52", "#2ba366", "#35c978", "#7fe0a9", "#d2f6e1"] },
+      "positive-bg": { "role": "secondary", "displayName": "Deep Green", "canonical": "#123d2a", "tonalRamp": ["#08261a", "#123d2a", "#1a5c3d", "#227d52", "#2ba366", "#35c978", "#7fe0a9", "#d2f6e1"] },
+      "negative": { "role": "secondary", "displayName": "Expense Red", "canonical": "#f05252", "tonalRamp": ["#300c0c", "#561616", "#7f2020", "#a92b2b", "#d13b3b", "#f05252", "#f79a9a", "#fde0e0"] },
+      "line": { "role": "neutral", "displayName": "Hairline", "canonical": "color-mix(in oklab, var(--color-fg) 9%, transparent)" },
+      "line-strong": { "role": "neutral", "displayName": "Strong Hairline", "canonical": "color-mix(in oklab, var(--color-fg) 16%, transparent)" },
+      "primary-wash": { "role": "primary", "displayName": "Primary Wash", "canonical": "color-mix(in oklab, var(--color-primary) 14%, transparent)" },
+      "negative-bg": { "role": "secondary", "displayName": "Red Wash", "canonical": "color-mix(in oklab, var(--color-negative) 16%, var(--color-surface))" },
+      "scrim": { "role": "neutral", "displayName": "Scrim", "canonical": "color-mix(in oklab, var(--color-canvas) 72%, transparent)" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Solo la cifra del saldo en Inicio. Fuente: decisión abierta (pila del sistema hoy; se recomendó una display autoalojada con figuras tabulares, sin decidir)." },
+      "headline": { "displayName": "Headline", "purpose": "Título de página." },
+      "title": { "displayName": "Title", "purpose": "Títulos de panel y totales del mes." },
+      "body": { "displayName": "Body", "purpose": "Texto base y descripción de filas." },
+      "label": { "displayName": "Label", "purpose": "Etiquetas de campo, botones pequeños, encabezados de día, línea secundaria." },
+      "caption": { "displayName": "Caption", "purpose": "Subtexto de la columna de efecto y etiquetas de pestaña." }
+    },
+    "shadows": [
+      { "name": "floating-ambient", "value": "0 8px 24px -8px var(--color-canvas)", "purpose": "Toasts y tooltip del gráfico mensual. Ninguna otra superficie lleva sombra." }
+    ],
+    "motion": [
+      { "name": "ease-out-expo", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Curva única para cambios de estado." },
+      { "name": "duration-fast", "value": "150ms", "purpose": "Hover, foco, presión, selección." },
+      { "name": "duration-base", "value": "200ms", "purpose": "Entrada y salida de la barra compacta del saldo." },
+      { "name": "duration-toast", "value": "220ms", "purpose": "Entrada de toasts (solo con motion-safe)." },
+      { "name": "reduced-motion", "value": "prefers-reduced-motion: reduce", "purpose": "Quita translate, scale y pulse; mantiene opacidad, color y el spinner de carga." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botón principal",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Acción principal (Guardar, + Gasto). Amarillo con texto Deep Navy.",
+      "html": "<button class=\"ds-btn-primary\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 256 256\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M228 128a12 12 0 0 1-12 12h-76v76a12 12 0 0 1-24 0v-76H40a12 12 0 0 1 0-24h76V40a12 12 0 0 1 24 0v76h76a12 12 0 0 1 12 12Z\"/></svg>Gasto</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 48px; padding: 0 16px; border: none; border-radius: 12px; background: var(--color-primary, #f4c542); color: var(--color-on-primary, #0b0f14); font: 600 0.9375rem/1 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; cursor: pointer; transition: background-color 150ms cubic-bezier(0.16, 1, 0.3, 1), transform 150ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-btn-primary:hover { background: var(--color-primary-soft, #ffe58a); } .ds-btn-primary:focus-visible { outline: 2px solid var(--color-primary, #f4c542); outline-offset: 2px; } .ds-btn-primary:active { transform: scale(0.98); }"
+    },
+    {
+      "name": "Botón secundario",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Acciones secundarias (+ Ingreso, Registrar abono).",
+      "html": "<button class=\"ds-btn-secondary\">Registrar abono</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 44px; padding: 0 14px; border: none; border-radius: 12px; background: var(--color-surface-2, #202832); color: var(--color-fg, #f3f4f6); font: 600 0.875rem/1 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; cursor: pointer; transition: background-color 150ms cubic-bezier(0.16, 1, 0.3, 1), transform 150ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-btn-secondary:hover { background: var(--color-line-strong, color-mix(in oklab, #f3f4f6 16%, transparent)); } .ds-btn-secondary:focus-visible { outline: 2px solid var(--color-primary, #f4c542); outline-offset: 2px; } .ds-btn-secondary:active { transform: scale(0.98); }"
+    },
+    {
+      "name": "Campo de texto",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Etiqueta arriba, input Slate de 48px y 16px de texto; foco amarillo.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Descripción</span><input class=\"ds-input\" placeholder=\"Mercado del mes\"></label>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 6px; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; } .ds-field-label { font-size: 0.875rem; font-weight: 500; color: var(--color-fg, #f3f4f6); } .ds-input { height: 48px; padding: 0 14px; border: 1px solid transparent; border-radius: 12px; background: var(--color-surface-2, #202832); color: var(--color-fg, #f3f4f6); font-size: 1rem; caret-color: var(--color-primary, #f4c542); transition: border-color 150ms, box-shadow 150ms; } .ds-input::placeholder { color: var(--color-fg-muted, #9ca3af); } .ds-input:hover { border-color: var(--color-line-strong, color-mix(in oklab, #f3f4f6 16%, transparent)); } .ds-input:focus, .ds-input:focus-visible { outline: none; border-color: var(--color-primary, #f4c542); box-shadow: 0 0 0 2px var(--color-primary-wash, color-mix(in oklab, #f4c542 14%, transparent)); }"
+    },
+    {
+      "name": "Control segmentado",
+      "kind": "chip",
+      "refersTo": "segmented-selected",
+      "description": "Grupo de radio; seleccionado con relleno Soft White y texto oscuro semibold.",
+      "html": "<div class=\"ds-seg\" role=\"radiogroup\"><button class=\"ds-seg-opt is-on\" role=\"radio\" aria-checked=\"true\">50/50</button><button class=\"ds-seg-opt\" role=\"radio\" aria-checked=\"false\">Porcentaje</button></div>",
+      "css": ".ds-seg { display: flex; gap: 4px; padding: 4px; border-radius: 12px; background: var(--color-surface-2, #202832); font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; } .ds-seg-opt { flex: 1; min-height: 44px; padding: 0 8px; border: none; border-radius: 8px; background: transparent; color: var(--color-fg-muted, #9ca3af); font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: color 150ms, background-color 150ms; } .ds-seg-opt:hover { color: var(--color-fg, #f3f4f6); } .ds-seg-opt:focus-visible { outline: 2px solid var(--color-primary, #f4c542); } .ds-seg-opt.is-on { background: var(--color-fg, #f3f4f6); color: var(--color-canvas, #0b0f14); font-weight: 600; }"
+    },
+    {
+      "name": "Chip de periodo",
+      "kind": "chip",
+      "refersTo": "chip-period",
+      "description": "Píldoras de 44px para elegir periodo en reportes.",
+      "html": "<div class=\"ds-chips\"><button class=\"ds-chip is-on\">Este mes</button><button class=\"ds-chip\">Mes pasado</button></div>",
+      "css": ".ds-chips { display: flex; gap: 8px; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; } .ds-chip { height: 44px; padding: 0 16px; border: none; border-radius: 9999px; background: var(--color-surface-2, #202832); color: var(--color-fg-muted, #9ca3af); font-size: 0.875rem; font-weight: 500; white-space: nowrap; cursor: pointer; transition: color 150ms, background-color 150ms; } .ds-chip:hover { color: var(--color-fg, #f3f4f6); } .ds-chip:focus-visible { outline: 2px solid var(--color-primary, #f4c542); outline-offset: 2px; } .ds-chip.is-on { background: var(--color-fg, #f3f4f6); color: var(--color-canvas, #0b0f14); font-weight: 600; }"
+    },
+    {
+      "name": "Libro diario",
+      "kind": "custom",
+      "refersTo": "ledger-sheet",
+      "description": "Signature: encabezado de día con saldo de cierre y doble regla; filas con efecto firmado tabular.",
+      "html": "<section class=\"ds-ledger\"><div class=\"ds-day\"><h2 class=\"ds-day-date is-today\">Hoy, 12 de octubre</h2><p class=\"ds-day-bal\">saldo <b>+$266.050</b></p></div><ul class=\"ds-rows\"><li class=\"ds-row\"><span class=\"ds-ico\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 256 256\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M216 64h-40a48 48 0 0 0-96 0H40a16 16 0 0 0-16 16v120a16 16 0 0 0 16 16h176a16 16 0 0 0 16-16V80a16 16 0 0 0-16-16Zm-88-32a32 32 0 0 1 32 32H96a32 32 0 0 1 32-32Zm88 168H40V80h176Z\"/></svg></span><span class=\"ds-main\"><span class=\"ds-title\">Mercado</span><span class=\"ds-sub\">Pagaste tú, 50/50</span></span><span class=\"ds-eff\"><span class=\"ds-pos\">+$60.000</span><span class=\"ds-cap\">de $120.000</span></span></li><li class=\"ds-row\"><span class=\"ds-ico\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 256 256\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M218.83 103.77 138.83 31.06a16 16 0 0 0-21.53 0l-80 72.71A16 16 0 0 0 32 115.53V208a16 16 0 0 0 16 16h160a16 16 0 0 0 16-16v-92.47a16 16 0 0 0-5.17-11.76ZM208 208H48v-92.47l80-72.73 80 72.73Z\"/></svg></span><span class=\"ds-main\"><span class=\"ds-title\">Arriendo</span><span class=\"ds-sub\">Pagó Beto, 50/50</span></span><span class=\"ds-eff\"><span class=\"ds-neg\">−$700.000</span><span class=\"ds-cap\">de $1.400.000</span></span></li></ul></section>",
+      "css": ".ds-ledger { padding: 12px 16px; border-radius: 16px; background: var(--color-surface, #151b22); color: var(--color-fg, #f3f4f6); font: 400 0.9375rem/1.5 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; } .ds-day { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 12px 0 8px; border-bottom: 3px double var(--color-line-strong, color-mix(in oklab, #f3f4f6 16%, transparent)); } .ds-day-date { margin: 0; font-size: 0.875rem; font-weight: 600; } .ds-day-date.is-today { color: var(--color-primary, #f4c542); } .ds-day-bal { margin: 0; font-size: 0.875rem; color: var(--color-fg-muted, #9ca3af); font-variant-numeric: tabular-nums; } .ds-day-bal b { color: var(--color-fg, #f3f4f6); font-weight: 600; } .ds-rows { list-style: none; margin: 0; padding: 0; } .ds-row { display: flex; align-items: center; gap: 12px; margin: 0 -8px; padding: 12px 8px; border-radius: 12px; transition: background-color 150ms; } .ds-row + .ds-row { border-top: 1px solid var(--color-line, color-mix(in oklab, #f3f4f6 9%, transparent)); } .ds-row:hover { background: color-mix(in oklab, #202832 70%, transparent); } .ds-ico { display: grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0; border-radius: 9999px; background: var(--color-surface-2, #202832); } .ds-main { display: flex; flex-direction: column; flex: 1; min-width: 0; } .ds-title { font-weight: 500; } .ds-sub { font-size: 0.875rem; color: var(--color-fg-muted, #9ca3af); } .ds-eff { display: flex; flex-direction: column; align-items: flex-end; font-variant-numeric: tabular-nums; } .ds-pos { font-weight: 600; color: var(--color-positive, #35c978); } .ds-neg { font-weight: 600; color: var(--color-negative, #f05252); } .ds-cap { font-size: 0.75rem; color: var(--color-fg-muted, #9ca3af); }"
+    },
+    {
+      "name": "Saldo grande",
+      "kind": "custom",
+      "refersTo": "compact-balance-bar",
+      "description": "Signature: frase + cifra Display tabular con chip de estado; se compacta en una barra fija de 48px al hacer scroll.",
+      "html": "<section class=\"ds-hero\"><h1 class=\"ds-hero-phrase\">Beto te debe</h1><p class=\"ds-hero-fig\">$266.050</p><span class=\"ds-hero-chip\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 256 256\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M204 64v104a12 12 0 0 1-24 0V93L72.49 200.49a12 12 0 0 1-17-17L163 76H88a12 12 0 0 1 0-24h104a12 12 0 0 1 12 12Z\"/></svg>A tu favor</span></section><div class=\"ds-bar\"><span>Beto te debe</span><b>$266.050</b></div>",
+      "css": ".ds-hero { padding: 24px 0; color: var(--color-fg, #f3f4f6); font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; } .ds-hero-phrase { margin: 0; font-size: 1.125rem; font-weight: 400; color: var(--color-fg-muted, #9ca3af); } .ds-hero-fig { margin: 4px 0 16px; font-size: clamp(2.25rem, 12vw, 3.75rem); line-height: 1.25; font-weight: 600; letter-spacing: -0.025em; font-variant-numeric: tabular-nums; } .ds-hero-chip { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 9999px; background: var(--color-positive-bg, #123d2a); color: var(--color-positive, #35c978); font-size: 0.875rem; font-weight: 500; } .ds-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 48px; padding: 0 16px; border-bottom: 1px solid var(--color-line, color-mix(in oklab, #f3f4f6 9%, transparent)); background: var(--color-surface, #151b22); font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-size: 0.875rem; color: var(--color-fg-muted, #9ca3af); } .ds-bar b { font-size: 1rem; font-weight: 600; color: var(--color-positive, #35c978); font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Barra inferior móvil",
+      "kind": "nav",
+      "refersTo": "button-primary",
+      "description": "Acciones rápidas (+ Gasto amarillo, + Ingreso y + Transferencia secundarias) sobre 4 pestañas; solo en pantallas de pestaña.",
+      "html": "<div class=\"ds-tabbar\"><nav class=\"ds-qa\"><a class=\"ds-qa-btn is-primary\" href=\"#\">+ Gasto</a><a class=\"ds-qa-btn\" href=\"#\">+ Ingreso</a><a class=\"ds-qa-btn\" href=\"#\">Transferencia</a></nav><nav class=\"ds-tabs\"><a class=\"ds-tab is-on\" href=\"#\"><svg width=\"24\" height=\"24\" viewBox=\"0 0 256 256\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M240 56v144a8 8 0 0 1-8 8h-72a24 24 0 0 0-24 24 8 8 0 0 1-16 0 24 24 0 0 0-24-24H24a8 8 0 0 1-8-8V56a8 8 0 0 1 8-8h64a40 40 0 0 1 40 40 40 40 0 0 1 40-40h64a8 8 0 0 1 8 8Z\"/></svg>Inicio</a><a class=\"ds-tab\" href=\"#\">Movimientos</a><a class=\"ds-tab\" href=\"#\">Reportes</a><a class=\"ds-tab\" href=\"#\">Ajustes</a></nav></div>",
+      "css": ".ds-tabbar { border-top: 1px solid var(--color-line, color-mix(in oklab, #f3f4f6 9%, transparent)); background: var(--color-surface, #151b22); font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; } .ds-qa { display: grid; grid-template-columns: 1.15fr 1fr 1.3fr; gap: 8px; padding: 10px 12px 0; } .ds-qa-btn { display: flex; align-items: center; justify-content: center; height: 48px; border-radius: 12px; background: var(--color-surface-2, #202832); color: var(--color-fg, #f3f4f6); font-size: 0.875rem; font-weight: 600; text-decoration: none; transition: background-color 150ms, transform 150ms; } .ds-qa-btn:hover { background: var(--color-line-strong, color-mix(in oklab, #f3f4f6 16%, transparent)); } .ds-qa-btn:active { transform: scale(0.98); } .ds-qa-btn:focus-visible { outline: 2px solid var(--color-primary, #f4c542); outline-offset: 2px; } .ds-qa-btn.is-primary { background: var(--color-primary, #f4c542); color: var(--color-on-primary, #0b0f14); } .ds-qa-btn.is-primary:hover { background: var(--color-primary-soft, #ffe58a); } .ds-tabs { display: flex; padding: 0 4px; } .ds-tab { display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 56px; color: var(--color-fg-muted, #9ca3af); font-size: 0.6875rem; font-weight: 500; text-decoration: none; transition: color 150ms; } .ds-tab:hover { color: var(--color-fg, #f3f4f6); } .ds-tab.is-on { color: var(--color-fg, #f3f4f6); } .ds-tab.is-on svg { color: var(--color-primary, #f4c542); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "El libro diario del hogar",
+    "overview": "BULLMILTON es una superficie de trabajo, no una vitrina. Se abre para responder una sola pregunta (quién le debe cuánto a quién) y para registrar un movimiento en segundos, casi siempre con una mano en el celular. Todo el sistema se organiza como un libro contable de casa: movimientos agrupados por día, cada día cerrado con su saldo acumulado, y cifras tabulares alineadas a la derecha que se leen en columna.\n\nEl mundo es oscuro por mandato de la especificación (§40.1): fondo Deep Navy, hojas Dark Slate, controles Slate. La profundidad se construye por capas tonales y reglas finas, no por sombras. El amarillo es escaso y significa algo concreto (actuar, hoy, atención); el verde y el rojo siempre viajan con signo o texto. La densidad es media: filas de 44px o más, sin decoración, con el saldo grande como única pieza de escala dramática.\n\nRechazo confirmado: el dashboard de tarjetas sueltas (saldo + widgets + lista genérica). El libro diario es la estructura.",
+    "keyCharacteristics": [
+      "Tema oscuro único; sin tema claro.",
+      "Capas tonales canvas, surface, surface-2 en lugar de sombras.",
+      "Cifras tabulares, alineadas a la derecha, con signo explícito.",
+      "Amarillo solo para acción, el día de hoy y datos que piden atención.",
+      "Una sola regla de radios: controles 12px, paneles 16px, chips completos.",
+      "Selección = relleno Soft White con texto oscuro en semibold."
+    ],
+    "rules": [
+      { "name": "The Yellow Means Act Rule", "body": "El amarillo marca acciones, el día de hoy y datos que piden atención (barras de magnitud, pendientes). Nunca es fondo decorativo.", "section": "colors" },
+      { "name": "The Sign Travels With Color Rule", "body": "Verde y rojo nunca son el único indicador: siempre van con signo (+ / −) o texto (\"a tu favor\", \"en tu contra\").", "section": "colors" },
+      { "name": "The Dark Only Rule", "body": "Solo existe el tema oscuro (`color-scheme: dark`). No hay tema claro ni conmutador.", "section": "colors" },
+      { "name": "The Tabular Money Rule", "body": "Toda cifra de dinero usa `tabular` y se alinea a la derecha cuando está en columna.", "section": "typography" },
+      { "name": "The Sixteen Pixel Input Rule", "body": "Inputs, selects y textareas usan 16px (`text-base`) para evitar el zoom en iOS.", "section": "typography" },
+      { "name": "The Thumb Zone Rule", "body": "Las acciones de registro viven en la zona del pulgar en móvil y en la barra lateral en escritorio; siempre a un toque desde las pestañas.", "section": "layout" },
+      { "name": "The Forty Four Rule", "body": "Todo objetivo táctil mide 44px o más (botones 44, 48 o 56px; pestañas 56px; filas del libro 64px).", "section": "layout" },
+      { "name": "The Tonal Depth Rule", "body": "La profundidad se expresa con capas tonales y reglas finas; las sombras quedan reservadas a capas flotantes transitorias.", "section": "elevation" },
+      { "name": "The One Radius Rule", "body": "Controles 12px, paneles 16px, chips completos. No hay otros radios salvo el anidado concéntrico.", "section": "shapes" }
+    ],
+    "dos": [
+      "**Do** tomar todo color de `src/styles/tokens.css` mediante utilidades o `var(--color-*)`.",
+      "**Do** usar amarillo solo para acciones, el día de hoy y datos que piden atención (barras de magnitud, pendientes).",
+      "**Do** acompañar verde y rojo con signo (+ / −) o texto.",
+      "**Do** mostrar toda cifra de dinero con `tabular`, alineada a la derecha en columnas.",
+      "**Do** marcar la selección con relleno Soft White y texto Deep Navy en semibold.",
+      "**Do** aplicar la regla de radios: controles 12px, paneles 16px, chips completos.",
+      "**Do** mantener objetivos táctiles de 44px o más e inputs de 16px.",
+      "**Do** limitar la animación a 150 a 250ms con `ease-out-expo` y respetar el movimiento reducido."
+    ],
+    "donts": [
+      "**Don't** usar el amarillo como fondo decorativo.",
+      "**Don't** usar color como único indicador de saldo o estado.",
+      "**Don't** introducir un tema claro ni fondos claros.",
+      "**Don't** añadir colores fuera de la paleta §40.1 ni sus mezclas derivadas.",
+      "**Don't** convertir Inicio en un dashboard de tarjetas sueltas; el libro diario es la estructura.",
+      "**Don't** mezclar familias de iconos; solo Phosphor.",
+      "**Don't** usar sombras para elevar paneles en reposo.",
+      "**Don't** tratar la pila tipográfica del sistema como decisión cerrada mientras siga abierta."
+    ]
+  }
+}
