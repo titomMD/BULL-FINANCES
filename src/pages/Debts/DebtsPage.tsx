@@ -5,6 +5,7 @@ import { invalidateData } from '../../hooks/useResource'
 import { toUserMessage } from '../../lib/errors'
 import { formatDay } from '../../lib/dates'
 import { formatMoney } from '../../lib/money'
+import { CardIcon } from '../../components/debts/CardIcon'
 import { ButtonLink } from '../../components/ui/Button'
 import { Page, PageHeader } from '../../components/ui/PageHeader'
 import { EmptyState, ErrorState, LedgerSkeleton } from '../../components/ui/States'
@@ -69,7 +70,7 @@ export function DebtsPage() {
                     to={`/tarjetas/${account.id}`}
                     className="flex items-center gap-3 rounded-2xl bg-surface px-4 py-3.5 transition-colors hover:bg-surface-2/60 sm:px-5"
                   >
-                    <CreditCardIcon aria-hidden="true" className="size-7 shrink-0 text-primary" />
+                    <CardIcon name={account.name} />
                     <span className="flex min-w-0 flex-1 flex-col">
                       <span className="font-semibold">
                         {account.name}

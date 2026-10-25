@@ -7,7 +7,9 @@ import { defaultPayMonth } from '../../lib/calculations/planMonth'
 import { todayBogota } from '../../lib/dates'
 import { toUserMessage } from '../../lib/errors'
 import { formatMoneyInput, parseMoneyInput } from '../../lib/money'
-import { parseStatementPaste } from '../../lib/statementImport'
+import { PdfPasswordError, readPdfLines } from '../../lib/pdfLines'
+import { parseBancolombiaStatement } from '../../lib/statementPdf'
+import { parseStatementPaste, type ImportedStatement } from '../../lib/statementImport'
 import {
   createStatement,
   deleteStatement,
@@ -15,7 +17,7 @@ import {
   updateStatement,
   uploadFile,
 } from '../../services/debts'
-import type { DebtStatement, StatementLine } from '../../types/domain'
+import type { DebtAccount, DebtStatement, StatementLine } from '../../types/domain'
 import { FilePicker } from '../../components/debts/FilePicker'
 import { FormFooter } from '../../components/forms/FormParts'
 import { MoneyInput } from '../../components/forms/MoneyInput'
@@ -28,9 +30,21 @@ import { useToast } from '../../components/ui/toast-context'
 
 const money = (value: number | null) => (value === null ? '' : formatMoneyInput(String(value)))
 const linesToText = (lines: StatementLine[]) =>
-  lines.map((l) => `${l.date} ; ${l.detail} ; ${formatMoneyInput(String(l.amount))}`).join('\n')
+  lines
+    .map(
+      (l) =>
+        `${l.date} ; ${l.detail} ; ${l.amount < 0 ? '-' : ''}${formatMoneyInput(String(Math.abs(l.amount)))}`,
+    )
+    .join('\n')
 
-function StatementForm({ accountId, statement }: { accountId: string; statement?: DebtStatement }) {
+function StatementForm({
+  account,
+  statement,
+}: {
+  account: DebtAccount
+  statement?: DebtStatement
+}) {
+  const accountId = account.id
   const { household, userId } = useHousehold()
   const navigate = useNavigate()
   const toast = useToast()
@@ -60,9 +74,54 @@ function StatementForm({ accountId, statement }: { accountId: string; statement?
       setPayMonth(defaultPayMonth(statementDay, /^\d{4}-\d{2}-\d{2}$/.test(dueDay) ? dueDay : null))
   }
 
+  const [pdf, setPdf] = useState<File | null>(null)
+  const [pdfPassword, setPdfPassword] = useState('')
+  const [askPassword, setAskPassword] = useState<'no' | 'needed' | 'wrong'>('no')
+  const [reading, setReading] = useState(false)
+
+  const readPdf = async (target: File, password?: string) => {
+    setReading(true)
+    try {
+      const lines = await readPdfLines(target, password)
+      const parsed = parseBancolombiaStatement(lines)
+      setAskPassword('no')
+      if (!parsed) {
+        toast.show(
+          'No pudimos leer este PDF. Adjúntalo, llena a mano o pega los datos más abajo.',
+          'error',
+        )
+        setFile(target)
+        return
+      }
+      if (parsed.last4 && account.last4 && parsed.last4 !== account.last4)
+        toast.show(
+          `Ojo: este extracto es de la tarjeta terminada en ${parsed.last4}, no de ${account.last4}.`,
+          'error',
+        )
+      applyImported(parsed)
+      setFile(target)
+      setPdfPassword('')
+      toast.show('Leímos tu extracto: revisa los datos y guarda')
+    } catch (error) {
+      if (error instanceof PdfPasswordError) {
+        setAskPassword(error.wrong ? 'wrong' : 'needed')
+      } else {
+        toast.show('No pudimos abrir ese PDF. ¿Está dañado?', 'error')
+      }
+    } finally {
+      setReading(false)
+    }
+  }
+
   const applyPaste = () => {
     const parsed = parseStatementPaste(pasted)
     if (!parsed) return toast.show('No entendimos ese texto. Revisa el formato.', 'error')
+    applyImported(parsed)
+    setPasted('')
+    toast.show('Datos copiados al formulario: revisa y guarda')
+  }
+
+  const applyImported = (parsed: ImportedStatement) => {
     const nextStatement = parsed.statementDate ?? statementDate
     const nextDue = parsed.dueDate ?? dueDate
     if (parsed.statementDate) setStatementDate(parsed.statementDate)
@@ -78,8 +137,6 @@ function StatementForm({ accountId, statement }: { accountId: string; statement?
     if (parsed.interest !== undefined) setInterest(money(parsed.interest))
     if (parsed.notes) setNotes(parsed.notes)
     if (parsed.lines) setLinesText(linesToText(parsed.lines))
-    setPasted('')
-    toast.show('Datos copiados al formulario: revísalos y guarda')
   }
 
   const save = async (event: React.FormEvent) => {
@@ -129,9 +186,59 @@ function StatementForm({ accountId, statement }: { accountId: string; statement?
 
   return (
     <form onSubmit={save} noValidate className="flex flex-col gap-6">
-      <details className="rounded-2xl bg-surface px-4 py-3" open={!statement}>
+      <section className="flex flex-col gap-3 rounded-2xl bg-surface px-4 py-3">
+        <h2 className="font-semibold">Subir el PDF del extracto</h2>
+        <p className="text-sm text-fg-muted">
+          La app lee el PDF aquí mismo, en tu navegador, y llena los datos. El archivo no se envía a
+          nadie hasta que guardes.
+        </p>
+        <FilePicker
+          label="PDF del extracto"
+          file={pdf}
+          onChange={(picked) => {
+            setPdf(picked)
+            setAskPassword('no')
+            setPdfPassword('')
+            if (picked) void readPdf(picked)
+          }}
+          onError={(message) => toast.show(message, 'error')}
+        />
+        {reading && <p className="text-sm text-fg-muted">Leyendo el extracto…</p>}
+        {askPassword !== 'no' && pdf && (
+          <div className="flex flex-col gap-2">
+            <Field
+              label="Clave del PDF"
+              hint="Los extractos del banco suelen venir con clave (por ejemplo, tu cédula)."
+              error={
+                askPassword === 'wrong' ? 'Esa clave no abrió el PDF. Prueba otra vez.' : undefined
+              }
+            >
+              {({ id, describedBy, invalid }) => (
+                <TextInput
+                  id={id}
+                  type="password"
+                  autoComplete="off"
+                  value={pdfPassword}
+                  aria-describedby={describedBy}
+                  aria-invalid={invalid}
+                  onChange={(e) => setPdfPassword(e.target.value)}
+                />
+              )}
+            </Field>
+            <Button
+              className="self-start"
+              loading={reading}
+              onClick={() => void readPdf(pdf, pdfPassword)}
+            >
+              Abrir PDF
+            </Button>
+          </div>
+        )}
+      </section>
+
+      <details className="rounded-2xl bg-surface px-4 py-3">
         <summary className="min-h-11 cursor-pointer font-semibold">
-          Copiar datos de un extracto (opcional)
+          O pegar los datos a mano (opcional)
         </summary>
         <div className="mt-2 flex flex-col gap-3">
           <p className="text-sm text-fg-muted">
@@ -314,7 +421,7 @@ export function StatementFormPage() {
       ) : !account || (statementId && !statement) ? (
         <EmptyState title="No encontramos eso">Puede que el enlace esté mal.</EmptyState>
       ) : (
-        <StatementForm key={statement?.id ?? 'new'} accountId={account.id} statement={statement} />
+        <StatementForm key={statement?.id ?? 'new'} account={account} statement={statement} />
       )}
     </Page>
   )

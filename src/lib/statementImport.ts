@@ -5,6 +5,8 @@
 import type { StatementLine } from '../types/domain'
 
 export interface ImportedStatement {
+  /** Últimos 4 dígitos, si el texto los trae. */
+  last4?: string
   statementDate?: string
   dueDate?: string
   payMonth?: string
@@ -27,7 +29,8 @@ const int = (value: unknown): number | undefined =>
 export function parseAmountText(raw: string): number | null {
   const digits = raw.replace(/[^\d]/g, '')
   if (!digits || digits.length > 14) return null
-  return Number(digits)
+  // Un «-» al inicio o al final es un abono (valor negativo).
+  return /^\s*[$\s]*-|-\s*$/.test(raw) ? -Number(digits) : Number(digits)
 }
 
 /** Acepta 2026-10-02, 02/10/2026 o 2/10/26 (día/mes/año). */
@@ -76,7 +79,8 @@ export function parseStatementPaste(text: string): ImportedStatement | null {
       ? raw.lines.flatMap((entry): StatementLine[] => {
           if (!entry || typeof entry !== 'object') return []
           const { date, detail, amount } = entry as Record<string, unknown>
-          const value = int(amount)
+          const value =
+            typeof amount === 'number' && Number.isFinite(amount) ? Math.round(amount) : undefined
           if (value === undefined) return []
           return [
             {

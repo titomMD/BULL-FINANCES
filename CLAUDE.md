@@ -110,7 +110,7 @@ enviadas`, acumulado entre meses. Quién pagó un gasto no importa. Solo si el s
   react-hook-form. Añadidas con justificación: @hookform/resolvers (puente Zod ↔ RHF),
   @phosphor-icons/react (iconos: la spec pide icono por tipo/categoría y las skills prohíben
   emoji o SVG a mano), vitest (tests del motor financiero), PGlite + pgtap (tests de BD sin Docker),
-  write-excel-file (exportar .xlsx real; 70 kB, una sola dependencia propia: fflate; se carga solo
+  pdfjs-dist (leer en el navegador el PDF de los extractos de Bancolombia, `lib/pdfLines.ts` + `lib/statementPdf.ts`; se carga solo al subir un PDF), write-excel-file (exportar .xlsx real; 70 kB, una sola dependencia propia: fflate; se carga solo
   al pulsar «Excel»), @fontsource-variable/{geist,manrope,ibm-plex-sans,atkinson-hyperlegible-next} (tipografías
   elegibles en Apariencia, autoalojadas porque la CSP solo permite fuentes propias).
 - Estructura del Inicio: "Libro diario" (ver `.impeccable/surfaces/`). Producto: `PRODUCT.md`.

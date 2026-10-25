@@ -10,6 +10,8 @@ describe('statementImport', () => {
   it('lee montos con puntos y símbolo', () => {
     expect(parseAmountText('$ 1.234.567')).toBe(1_234_567)
     expect(parseAmountText('abc')).toBeNull()
+    expect(parseAmountText('$ -460.829')).toBe(-460_829)
+    expect(parseAmountText('828.299-')).toBe(-828_299)
   })
 
   it('lee fechas en varios formatos', () => {
