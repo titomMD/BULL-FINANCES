@@ -24,4 +24,11 @@ describe('gasto prellenado desde un atajo', () => {
     expect(parsePrefill(q('monto=100&fecha=ayer'))!.date).toBeNull()
     expect(parsePrefill(q(''))).toBeNull()
   })
+  it('reconoce la tarjeta débito y quita el asterisco de la tarjeta', () => {
+    const r = parsePrefill(q('monto=4.800,00&desc=CEN%20CIAL&tarjeta=*0879&tipo=T.Deb'))!
+    expect(r.debit).toBe(true)
+    expect(r.card).toBe('0879')
+    expect(r.pesos).toBe(4_800)
+    expect(parsePrefill(q('monto=1&tipo=T.Cred'))!.debit).toBe(false)
+  })
 })

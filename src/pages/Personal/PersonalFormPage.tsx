@@ -76,14 +76,15 @@ function PersonalForm({ kind, movement }: { kind: Kind; movement?: PersonalMovem
   const [params] = useSearchParams()
   const prefill = movement ? null : parsePrefill(params)
   const [payChoice, setPayChoice] = useState<string | null>(null)
-  const matchedCard = prefill?.card
-    ? cards.find(
-        (card) =>
-          card.last4 === prefill.card ||
-          card.name.toLowerCase().includes(prefill.card.toLowerCase()) ||
-          prefill.card.toLowerCase().includes(card.name.toLowerCase()),
-      )
-    : undefined
+  const matchedCard =
+    prefill?.card && !prefill.debit
+      ? cards.find(
+          (card) =>
+            card.last4 === prefill.card ||
+            card.name.toLowerCase().includes(prefill.card.toLowerCase()) ||
+            prefill.card.toLowerCase().includes(card.name.toLowerCase()),
+        )
+      : undefined
   const payWith = payChoice ?? matchedCard?.id ?? ''
   const setPayWith = setPayChoice
   const [currencyChoice, setCurrencyChoice] = useState<DebtCurrency | null>(null)

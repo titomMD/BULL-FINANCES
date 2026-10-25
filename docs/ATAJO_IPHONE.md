@@ -1,19 +1,20 @@
-# Atajo del iPhone: pagos de Wallet → Freyapp
+# Atajo del iPhone: SMS de Bancolombia → Freyapp
 
-Cuando pagas con una tarjeta de Wallet (Apple Pay), el iPhone puede abrir Freyapp con el gasto ya
-escrito. Tú solo tocas «Guardar».
+Cada compra de Bancolombia llega por SMS (remitente 85437), por ejemplo:
 
-El enlace que abre el atajo (la app lee estos datos):
+- `Bancolombia: Compraste $4.800,00 en CEN CIAL LA FLORIDA con tu T.Deb *0879, el 21/02/2026 a las 18:46.`
+- `Bancolombia: Compraste COP66.788,00 en FARMATODO ALTOS DE C con tu T.Cred *1068, el 20/08/2026 a las 10:41.`
+
+Una automatización de Atajos lee el SMS y abre Freyapp con el gasto escrito; tú tocas «Guardar».
+
+- `T.Deb` (débito) → gasto de **dinero personal**.
+- `T.Cred` (crédito) → gasto de la **tarjeta** cuyos últimos 4 dígitos coincidan.
+
+Enlace que abre el atajo:
 
 ```
-https://TU-SITIO.netlify.app/personal/gastos/nuevo?monto=45000&desc=Rappi&tarjeta=Visa&moneda=COP
+https://TU-SITIO.netlify.app/personal/gastos/nuevo?monto=4.800,00&desc=CEN CIAL LA FLORIDA&tarjeta=0879&tipo=T.Deb
 ```
 
-- `monto`: valor del cobro (con o sin puntos y comas).
-- `desc`: comercio.
-- `tarjeta`: nombre de la tarjeta en Wallet o sus últimos 4 dígitos (se compara con tus tarjetas de Freyapp).
-- `moneda`: `COP` (por defecto) o `USD`.
-- `fecha` (opcional): `AAAA-MM-DD`.
-
-Solo funciona con pagos hechos con Apple Pay: la tarjeta física o las compras online con el número
-no avisan al iPhone.
+- `monto`: valor (con o sin puntos y comas), `desc`: comercio, `tarjeta`: últimos 4 dígitos o nombre,
+  `tipo`: `T.Deb` o `T.Cred`, `moneda`: `COP` (por defecto) o `USD`, `fecha` (opcional): `AAAA-MM-DD`.
