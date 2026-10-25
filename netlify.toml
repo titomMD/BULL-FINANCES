@@ -1,0 +1,39 @@
+# Despliegue en Netlify (equivale a vercel.json). Netlify lee este archivo al conectar el repo.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  # El proyecto exige Node >= 22.12 (package.json → engines).
+  NODE_VERSION = "22"
+  # Estas dos variables VITE_ son públicas por diseño (URL y publishable key de Supabase) y
+  # terminan en el JavaScript del navegador. Sin esto, el escáner de secretos de Netlify podría
+  # hacer fallar el build al encontrarlas en la salida.
+  SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_URL,VITE_SUPABASE_PUBLISHABLE_KEY"
+
+# App de una sola página: cualquier ruta sirve index.html (los archivos que existen, como /assets/*,
+# se sirven primero).
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache"
