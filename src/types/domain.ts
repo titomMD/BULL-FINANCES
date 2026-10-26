@@ -292,3 +292,60 @@ export interface DebtCardExpense {
   amount: number
   fxRateCents: number | null
 }
+
+// --- Bolsillos y cuenta con mamá -----------------------------------------------------------------
+
+export type PocketMoveKind =
+  | 'deposit'
+  | 'withdraw'
+  | 'adjust'
+  | 'transfer'
+  | 'loan_out'
+  | 'loan_in'
+  | 'loan_back'
+  | 'loan_return'
+
+export interface Pocket {
+  id: string
+  name: string
+  /** Meta: lo que el bolsillo debería tener. */
+  goal: number | null
+  /** El faltante de este bolsillo corresponde a lo que mamá le debe a la persona. */
+  coversReceivable: boolean
+  sortOrder: number
+  archivedAt: string | null
+}
+
+export interface PocketMove {
+  id: string
+  pocketId: string
+  /** Con signo: positivo entra, negativo sale. */
+  amount: number
+  kind: PocketMoveKind
+  date: string
+  note: string | null
+  linkId: string | null
+}
+
+export type ReceivableFrequency = 'weekly' | 'monthly'
+
+export interface ReceivableRule {
+  id: string
+  label: string
+  amount: number
+  frequency: ReceivableFrequency
+  startsOn: string
+  endsOn: string | null
+  active: boolean
+  /** Hasta qué día ya se registraron sus cobros. */
+  generatedUntil: string | null
+}
+
+export interface ReceivableEntry {
+  id: string
+  kind: 'charge' | 'payment'
+  amount: number
+  date: string
+  note: string | null
+  ruleId: string | null
+}

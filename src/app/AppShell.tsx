@@ -6,6 +6,7 @@ import {
   ChartPieIcon,
   CreditCardIcon,
   GearSixIcon,
+  PiggyBankIcon,
   ListBulletsIcon,
   WalletIcon,
   LockSimpleIcon,
@@ -37,6 +38,7 @@ const sharedNav: NavItem[] = [
 const soloNav: NavItem[] = [
   { to: '/', label: 'Inicio', icon: BookOpenIcon, end: true },
   { to: '/plan', label: 'Mi plan', icon: CalendarCheckIcon },
+  { to: '/bolsillos', label: 'Bolsillos', icon: PiggyBankIcon },
   { to: '/tarjetas', label: 'Tarjetas', icon: CreditCardIcon },
   { to: '/personal', label: 'Mi dinero', icon: LockSimpleIcon },
   { to: '/presupuestos', label: 'Presupuestos', icon: WalletIcon },

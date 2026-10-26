@@ -52,6 +52,12 @@
   pagos) y calendario `.ics` con alarma. No hay notificaciones push: exigirían service worker y
   servidor de envíos (cambio de arquitectura pendiente de decidir). El mes de presupuesto de cada
   extracto se cambia en la página de la tarjeta (`PayMonthPicker`).
+  v7 (2026-10-25): bolsillos (`pockets`, `pocket_moves`, `/bolsillos`): espejo manual de los de
+  Bancolombia; saldo = suma de movimientos con signo; traslados y préstamos entre bolsillos por la RPC
+  atómica `move_between_pockets` (dos movimientos con `link_id`); cálculo en `calculations/pockets.ts`.
+  «Mamá me debe» (`receivable_entries`, `receivable_rules`, `/mama`, `calculations/receivables.ts`):
+  libreta de cobros/pagos con cobros automáticos semanales o mensuales (`generated_until` evita que
+  vuelva lo que se borró). Privado por RLS y fuera de los cálculos del hogar. Solo en el menú del modo solo.
 - Ninguna service key / secret key / password de Postgres en el frontend ni en variables
   `VITE_*`. En el cliente solo va la publishable (anon) key.
 - Tests de RLS con pgTAP en `supabase/tests/database/`. Rápido sin Docker: `npm run test:db`;

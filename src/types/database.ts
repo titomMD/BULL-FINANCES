@@ -964,6 +964,269 @@ export type Database = {
           },
         ]
       }
+      pockets: {
+        Row: {
+          archived_at: string | null
+          covers_receivable: boolean
+          goal: number | null
+          household_id: string
+          id: string
+          name: string
+          sort_order: number
+          user_id: string
+          created_at: string
+          created_by: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          archived_at?: string | null
+          covers_receivable?: boolean
+          goal?: number | null
+          household_id: string
+          id?: string
+          name: string
+          sort_order?: number
+          user_id?: string
+          created_at?: string
+          created_by?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          archived_at?: string | null
+          covers_receivable?: boolean
+          goal?: number | null
+          household_id?: string
+          id?: string
+          name?: string
+          sort_order?: number
+          user_id?: string
+          created_at?: string
+          created_by?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'pockets_household_id_fkey'
+            columns: ['household_id']
+            isOneToOne: false
+            referencedRelation: 'households'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'pockets_household_id_user_id_fkey'
+            columns: ['household_id', 'user_id']
+            isOneToOne: false
+            referencedRelation: 'household_members'
+            referencedColumns: ['household_id', 'user_id']
+          },
+        ]
+      }
+      pocket_moves: {
+        Row: {
+          amount: number
+          household_id: string
+          id: string
+          kind: string
+          link_id: string | null
+          move_date: string
+          note: string | null
+          pocket_id: string
+          user_id: string
+          created_at: string
+          created_by: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          amount: number
+          household_id: string
+          id?: string
+          kind: string
+          link_id?: string | null
+          move_date?: string
+          note?: string | null
+          pocket_id: string
+          user_id?: string
+          created_at?: string
+          created_by?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          amount?: number
+          household_id?: string
+          id?: string
+          kind?: string
+          link_id?: string | null
+          move_date?: string
+          note?: string | null
+          pocket_id?: string
+          user_id?: string
+          created_at?: string
+          created_by?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'pocket_moves_household_id_fkey'
+            columns: ['household_id']
+            isOneToOne: false
+            referencedRelation: 'households'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'pocket_moves_household_id_user_id_fkey'
+            columns: ['household_id', 'user_id']
+            isOneToOne: false
+            referencedRelation: 'household_members'
+            referencedColumns: ['household_id', 'user_id']
+          },
+          {
+            foreignKeyName: 'pocket_moves_pocket_id_user_id_fkey'
+            columns: ['pocket_id', 'user_id']
+            isOneToOne: false
+            referencedRelation: 'pockets'
+            referencedColumns: ['id', 'user_id']
+          },
+        ]
+      }
+      receivable_entries: {
+        Row: {
+          amount: number
+          entry_date: string
+          household_id: string
+          id: string
+          kind: string
+          note: string | null
+          rule_id: string | null
+          user_id: string
+          created_at: string
+          created_by: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          amount: number
+          entry_date?: string
+          household_id: string
+          id?: string
+          kind: string
+          note?: string | null
+          rule_id?: string | null
+          user_id?: string
+          created_at?: string
+          created_by?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          amount?: number
+          entry_date?: string
+          household_id?: string
+          id?: string
+          kind?: string
+          note?: string | null
+          rule_id?: string | null
+          user_id?: string
+          created_at?: string
+          created_by?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'receivable_entries_household_id_fkey'
+            columns: ['household_id']
+            isOneToOne: false
+            referencedRelation: 'households'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'receivable_entries_household_id_user_id_fkey'
+            columns: ['household_id', 'user_id']
+            isOneToOne: false
+            referencedRelation: 'household_members'
+            referencedColumns: ['household_id', 'user_id']
+          },
+          {
+            foreignKeyName: 'receivable_entries_rule_id_user_id_fkey'
+            columns: ['rule_id', 'user_id']
+            isOneToOne: false
+            referencedRelation: 'receivable_rules'
+            referencedColumns: ['id', 'user_id']
+          },
+        ]
+      }
+      receivable_rules: {
+        Row: {
+          active: boolean
+          amount: number
+          ends_on: string | null
+          frequency: string
+          generated_until: string | null
+          household_id: string
+          id: string
+          label: string
+          starts_on: string
+          user_id: string
+          created_at: string
+          created_by: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          amount: number
+          ends_on?: string | null
+          frequency: string
+          generated_until?: string | null
+          household_id: string
+          id?: string
+          label: string
+          starts_on: string
+          user_id?: string
+          created_at?: string
+          created_by?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          amount?: number
+          ends_on?: string | null
+          frequency?: string
+          generated_until?: string | null
+          household_id?: string
+          id?: string
+          label?: string
+          starts_on?: string
+          user_id?: string
+          created_at?: string
+          created_by?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'receivable_rules_household_id_fkey'
+            columns: ['household_id']
+            isOneToOne: false
+            referencedRelation: 'households'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'receivable_rules_household_id_user_id_fkey'
+            columns: ['household_id', 'user_id']
+            isOneToOne: false
+            referencedRelation: 'household_members'
+            referencedColumns: ['household_id', 'user_id']
+          },
+        ]
+      }
       debt_payments: {
         Row: {
           account_id: string
@@ -1668,6 +1931,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      move_between_pockets: {
+        Args: {
+          p_amount: number
+          p_date?: string
+          p_from: string
+          p_kind?: string
+          p_note?: string
+          p_to: string
+        }
+        Returns: string
+      }
       accept_invitation: { Args: { p_code: string }; Returns: string }
       create_expense: {
         Args: {
