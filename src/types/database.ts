@@ -1643,6 +1643,7 @@ export type Database = {
           mode: string
           motion: string
           person_color: string | null
+          pockets_enabled: boolean
           private_mode: boolean
           report_chart: string
           spend_alert_threshold: number
@@ -1662,6 +1663,7 @@ export type Database = {
           mode?: string
           motion?: string
           person_color?: string | null
+          pockets_enabled?: boolean
           private_mode?: boolean
           report_chart?: string
           spend_alert_threshold?: number
@@ -1681,6 +1683,7 @@ export type Database = {
           mode?: string
           motion?: string
           person_color?: string | null
+          pockets_enabled?: boolean
           private_mode?: boolean
           report_chart?: string
           spend_alert_threshold?: number

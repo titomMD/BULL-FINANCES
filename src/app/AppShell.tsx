@@ -13,6 +13,7 @@ import {
   type IconProps,
 } from '@phosphor-icons/react'
 import { QuickActions } from '../components/QuickActions'
+import { usePocketsEnabled } from '../hooks/usePockets'
 import { useSolo } from '../hooks/useSolo'
 import { useHousehold } from './household-context'
 import { Brand } from '../components/Brand'
@@ -97,7 +98,9 @@ function TabLink({ item }: { item: NavItem }) {
 export function AppShell() {
   const { household, me } = useHousehold()
   const { pathname } = useLocation()
-  const navItems = useSolo() ? soloNav : sharedNav
+  const solo = useSolo()
+  const { enabled: pockets } = usePocketsEnabled()
+  const navItems = solo ? soloNav.filter((item) => item.to !== '/bolsillos' || pockets) : sharedNav
   // En móvil, la barra inferior solo vive en las pestañas principales; formularios y detalles
   // tienen su botón de volver y su botón de guardar en la zona del pulgar.
   const onTab = navItems.some((item) => item.to === pathname)

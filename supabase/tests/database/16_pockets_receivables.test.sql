@@ -2,7 +2,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(15);
+select plan(17);
 
 create function pg_temp.login_as(p_id uuid)
 returns void
@@ -15,6 +15,9 @@ $$;
 insert into auth.users (id, email, aud, role, raw_user_meta_data) values
   ('11111111-1111-1111-1111-111111111111', 'a@freyapp.test', 'authenticated', 'authenticated', '{"display_name":"Ana"}'),
   ('22222222-2222-2222-2222-222222222222', 'b@freyapp.test', 'authenticated', 'authenticated', '{"display_name":"Beto"}');
+
+-- Solo A tiene los bolsillos activados (se activa desde el editor SQL, nunca desde la app).
+update public.profiles set pockets_enabled = true where id = '11111111-1111-1111-1111-111111111111';
 
 select pg_temp.login_as('11111111-1111-1111-1111-111111111111');
 select set_config('test.ha', public.create_household('Mis finanzas')::text, true);
@@ -88,6 +91,11 @@ select throws_ok(
   '23505', null, 'No se duplica el cobro de la misma regla y día'
 );
 
+select throws_ok(
+  $$ update public.profiles set pockets_enabled = false where id = '11111111-1111-1111-1111-111111111111' $$,
+  '42501', null, 'Nadie cambia el interruptor desde la app'
+);
+
 -- B no ve nada de A ni puede tocarlo
 select pg_temp.login_as('22222222-2222-2222-2222-222222222222');
 select set_config('test.hb', public.create_household('Hogar B')::text, true);
@@ -97,6 +105,11 @@ select throws_ok(
   format($$ select public.move_between_pockets(%L, %L, 10, 'transfer') $$,
          current_setting('test.sem'), current_setting('test.gas')),
   '22023', null, 'B no puede mover dinero de bolsillos ajenos'
+);
+
+select throws_ok(
+  format($$ insert into public.pockets (household_id, name) values (%L, 'Intruso') $$, current_setting('test.hb')),
+  '42501', null, 'B (sin el interruptor) no puede crear bolsillos'
 );
 
 select * from finish();

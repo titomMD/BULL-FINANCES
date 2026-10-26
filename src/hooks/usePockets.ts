@@ -1,9 +1,11 @@
 import { useHousehold } from '../app/household-context'
+import { useSignedInUser } from '../app/auth-context'
 import {
   fetchMyPocketMoves,
   fetchMyPockets,
   fetchMyReceivableEntries,
   fetchMyReceivableRules,
+  fetchPocketsEnabled,
 } from '../services/pockets'
 import { useResource } from './useResource'
 
@@ -35,4 +37,11 @@ export function useReceivableRules() {
   return useResource(`receivable-rules:${household.id}:${userId}`, () =>
     fetchMyReceivableRules(household.id),
   )
+}
+
+/** ¿Tiene esta cuenta los bolsillos activados? `loading` mientras se averigua. */
+export function usePocketsEnabled() {
+  const { userId } = useSignedInUser()
+  const resource = useResource(`pockets-enabled:${userId}`, () => fetchPocketsEnabled(userId))
+  return { enabled: resource.data === true, loading: resource.loading }
 }

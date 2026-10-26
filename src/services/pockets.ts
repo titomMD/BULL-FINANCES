@@ -12,6 +12,14 @@ import type { PendingCharge } from '../lib/calculations/receivables'
 
 // Bolsillos y cuenta con mamá. Todo privado por RLS.
 
+/** ¿Esta cuenta tiene activados los bolsillos? (Lo decide la base de datos; la app no lo cambia.) */
+export async function fetchPocketsEnabled(userId: string): Promise<boolean> {
+  const row = unwrap(
+    await supabase.from('profiles').select('pockets_enabled').eq('id', userId).single(),
+  )
+  return row.pockets_enabled
+}
+
 // --- Bolsillos ------------------------------------------------------------------------------------
 
 export async function fetchMyPockets(householdId: string): Promise<Pocket[]> {

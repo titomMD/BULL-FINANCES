@@ -58,6 +58,8 @@
   «Mamá me debe» (`receivable_entries`, `receivable_rules`, `/mama`, `calculations/receivables.ts`):
   libreta de cobros/pagos con cobros automáticos semanales o mensuales (`generated_until` evita que
   vuelva lo que se borró). Privado por RLS y fuera de los cálculos del hogar. Solo en el menú del modo solo.
+  Solo para cuentas autorizadas: `profiles.pockets_enabled` (sin GRANT para la app; se activa por SQL) oculta
+  menú y rutas (`PocketsGate`) y políticas RESTRICTIVE de INSERT rechazan crear datos sin él.
 - Ninguna service key / secret key / password de Postgres en el frontend ni en variables
   `VITE_*`. En el cliente solo va la publishable (anon) key.
 - Tests de RLS con pgTAP en `supabase/tests/database/`. Rápido sin Docker: `npm run test:db`;

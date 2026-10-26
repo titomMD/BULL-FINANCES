@@ -20,6 +20,7 @@ import { PlanPage } from '../pages/Plan/PlanPage'
 import { PocketsPage } from '../pages/Pockets/PocketsPage'
 import { PocketPage } from '../pages/Pockets/PocketPage'
 import { PocketFormPage } from '../pages/Pockets/PocketFormPage'
+import { PocketsGate } from '../pages/Pockets/PocketsGate'
 import { MomPage } from '../pages/Mom/MomPage'
 import { DebtsPage } from '../pages/Debts/DebtsPage'
 import { AccountPage } from '../pages/Debts/AccountPage'
@@ -98,11 +99,16 @@ export const router = createBrowserRouter([
               { path: 'tarjetas/:id/editar', element: <AccountFormPage /> },
               { path: 'tarjetas/:id/extractos/nuevo', element: <StatementFormPage /> },
               { path: 'tarjetas/:id/extractos/:statementId', element: <StatementFormPage /> },
-              { path: 'bolsillos', element: <PocketsPage /> },
-              { path: 'bolsillos/nuevo', element: <PocketFormPage /> },
-              { path: 'bolsillos/:id', element: <PocketPage /> },
-              { path: 'bolsillos/:id/editar', element: <PocketFormPage /> },
-              { path: 'mama', element: <MomPage /> },
+              {
+                element: <PocketsGate />,
+                children: [
+                  { path: 'bolsillos', element: <PocketsPage /> },
+                  { path: 'bolsillos/nuevo', element: <PocketFormPage /> },
+                  { path: 'bolsillos/:id', element: <PocketPage /> },
+                  { path: 'bolsillos/:id/editar', element: <PocketFormPage /> },
+                  { path: 'mama', element: <MomPage /> },
+                ],
+              },
               { path: 'personal', element: <PersonalPage /> },
               { path: 'personal/ingresos/nuevo', element: <PersonalFormPage kind="income" /> },
               { path: 'personal/gastos/nuevo', element: <PersonalFormPage kind="expense" /> },
