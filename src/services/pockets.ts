@@ -298,3 +298,100 @@ export async function applyPendingCharges(
     )
   }
 }
+
+// --- Importar la bitácora ------------------------------------------------------------------------
+
+/**
+ * Importa cobros y pagos de la bitácora. Si `replaceIds` trae los movimientos actuales, primero
+ * se guarda lo nuevo y solo después se borra lo viejo (así, si algo falla, no se pierde nada).
+ */
+export async function importReceivableEntries(
+  householdId: string,
+  entries: Array<{ kind: 'charge' | 'payment'; amount: number; date: string; note: string }>,
+  replaceIds: string[] = [],
+): Promise<void> {
+  for (let start = 0; start < entries.length; start += 200) {
+    assertOk(
+      await supabase.from('receivable_entries').insert(
+        entries.slice(start, start + 200).map((entry) => ({
+          household_id: householdId,
+          kind: entry.kind,
+          amount: entry.amount,
+          entry_date: entry.date,
+          note: entry.note.trim() || null,
+        })),
+      ),
+    )
+  }
+  for (let start = 0; start < replaceIds.length; start += 100) {
+    assertOk(
+      await supabase
+        .from('receivable_entries')
+        .delete()
+        .in('id', replaceIds.slice(start, start + 100)),
+    )
+  }
+}
+
+// --- Compartir la libreta (solo lectura) ----------------------------------------------------------
+
+export interface ReceivableShare {
+  id: string
+  viewerEmail: string
+  label: string
+}
+
+export async function fetchMyShares(userId: string): Promise<ReceivableShare[]> {
+  const rows = unwrap(
+    await supabase
+      .from('receivable_shares')
+      .select('id, viewer_email, label')
+      .eq('user_id', userId)
+      .order('created_at'),
+  )
+  return rows.map((row) => ({ id: row.id, viewerEmail: row.viewer_email, label: row.label }))
+}
+
+export async function createShare(viewerEmail: string, label: string): Promise<void> {
+  assertOk(
+    await supabase
+      .from('receivable_shares')
+      .insert({ viewer_email: viewerEmail.trim().toLowerCase(), label: label.trim() }),
+  )
+}
+
+export async function deleteShare(shareId: string): Promise<void> {
+  assertOk(await supabase.from('receivable_shares').delete().eq('id', shareId))
+}
+
+export interface SharedLedger {
+  ownerId: string
+  ownerName: string
+  label: string
+}
+
+/** Libretas que alguien compartió conmigo. */
+export async function fetchSharedLedgers(): Promise<SharedLedger[]> {
+  const rows = unwrap(await supabase.rpc('ledgers_shared_with_me'))
+  return rows.map((row) => ({ ownerId: row.owner_id, ownerName: row.owner_name, label: row.label }))
+}
+
+/** Cobros y pagos de una libreta compartida conmigo (la base de datos solo deja leer las compartidas). */
+export async function fetchSharedEntries(ownerId: string): Promise<ReceivableEntry[]> {
+  const rows = unwrap(
+    await supabase
+      .from('receivable_entries')
+      .select('id, kind, amount, entry_date, note, rule_id')
+      .eq('user_id', ownerId)
+      .order('entry_date', { ascending: false })
+      .limit(5000),
+  )
+  return rows.map((row) => ({
+    id: row.id,
+    kind: row.kind as 'charge' | 'payment',
+    amount: row.amount,
+    date: row.entry_date,
+    note: row.note,
+    ruleId: row.rule_id,
+  }))
+}

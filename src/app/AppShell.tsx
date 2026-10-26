@@ -6,6 +6,7 @@ import {
   ChartPieIcon,
   CreditCardIcon,
   GearSixIcon,
+  HandCoinsIcon,
   PiggyBankIcon,
   ListBulletsIcon,
   WalletIcon,
@@ -13,7 +14,7 @@ import {
   type IconProps,
 } from '@phosphor-icons/react'
 import { QuickActions } from '../components/QuickActions'
-import { usePocketsEnabled } from '../hooks/usePockets'
+import { usePocketsEnabled, useSharedLedgers } from '../hooks/usePockets'
 import { useSolo } from '../hooks/useSolo'
 import { useHousehold } from './household-context'
 import { Brand } from '../components/Brand'
@@ -100,7 +101,15 @@ export function AppShell() {
   const { pathname } = useLocation()
   const solo = useSolo()
   const { enabled: pockets } = usePocketsEnabled()
-  const navItems = solo ? soloNav.filter((item) => item.to !== '/bolsillos' || pockets) : sharedNav
+  const shared = useSharedLedgers()
+  // Libretas que alguien compartió contigo (p. ej. «Juan», vista por su mamá): un botón por cada una.
+  const sharedItems: NavItem[] = (shared.data ?? []).map((ledger) => ({
+    to: `/compartido/${ledger.ownerId}`,
+    label: ledger.label,
+    icon: HandCoinsIcon,
+  }))
+  const baseItems = solo ? soloNav.filter((item) => item.to !== '/bolsillos' || pockets) : sharedNav
+  const navItems = [...baseItems.slice(0, -1), ...sharedItems, ...baseItems.slice(-1)]
   // En móvil, la barra inferior solo vive en las pestañas principales; formularios y detalles
   // tienen su botón de volver y su botón de guardar en la zona del pulgar.
   const onTab = navItems.some((item) => item.to === pathname)

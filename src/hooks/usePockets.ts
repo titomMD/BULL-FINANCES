@@ -5,7 +5,10 @@ import {
   fetchMyPockets,
   fetchMyReceivableEntries,
   fetchMyReceivableRules,
+  fetchMyShares,
   fetchPocketsEnabled,
+  fetchSharedEntries,
+  fetchSharedLedgers,
 } from '../services/pockets'
 import { useResource } from './useResource'
 
@@ -44,4 +47,22 @@ export function usePocketsEnabled() {
   const { userId } = useSignedInUser()
   const resource = useResource(`pockets-enabled:${userId}`, () => fetchPocketsEnabled(userId))
   return { enabled: resource.data === true, loading: resource.loading }
+}
+
+/** A quién le compartiste tu libreta. */
+export function useMyShares() {
+  const { userId } = useSignedInUser()
+  return useResource(`receivable-shares:${userId}`, () => fetchMyShares(userId))
+}
+
+/** Libretas que otras personas compartieron contigo (p. ej. la de Juan, vista por su mamá). */
+export function useSharedLedgers() {
+  const { userId } = useSignedInUser()
+  return useResource(`shared-ledgers:${userId}`, () => fetchSharedLedgers())
+}
+
+/** Los cobros y pagos de una libreta compartida contigo. */
+export function useSharedEntries(ownerId: string) {
+  const { userId } = useSignedInUser()
+  return useResource(`shared-entries:${userId}:${ownerId}`, () => fetchSharedEntries(ownerId))
 }

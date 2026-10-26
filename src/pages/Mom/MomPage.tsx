@@ -21,6 +21,8 @@ import {
   setReceivableRuleActive,
 } from '../../services/pockets'
 import type { ReceivableFrequency } from '../../types/domain'
+import { BitacoraImport } from './BitacoraImport'
+import { SharePanel } from './SharePanel'
 import { MoneyInput } from '../../components/forms/MoneyInput'
 import { Button } from '../../components/ui/Button'
 import { Field, Select, TextInput } from '../../components/ui/Field'
@@ -242,6 +244,8 @@ export function MomPage() {
             )}
           </section>
           <EntryForm />
+          <BitacoraImport current={list} />
+          <SharePanel />
           <section className="flex flex-col gap-3 rounded-2xl bg-surface px-4 py-4 sm:px-5">
             <div>
               <h2 className="font-semibold">Cobros automáticos</h2>

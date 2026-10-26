@@ -21,6 +21,7 @@ import { PocketsPage } from '../pages/Pockets/PocketsPage'
 import { PocketPage } from '../pages/Pockets/PocketPage'
 import { PocketFormPage } from '../pages/Pockets/PocketFormPage'
 import { PocketsGate } from '../pages/Pockets/PocketsGate'
+import { SharedLedgerPage } from '../pages/Mom/SharedLedgerPage'
 import { MomPage } from '../pages/Mom/MomPage'
 import { DebtsPage } from '../pages/Debts/DebtsPage'
 import { AccountPage } from '../pages/Debts/AccountPage'
@@ -109,6 +110,7 @@ export const router = createBrowserRouter([
                   { path: 'mama', element: <MomPage /> },
                 ],
               },
+              { path: 'compartido/:ownerId', element: <SharedLedgerPage /> },
               { path: 'personal', element: <PersonalPage /> },
               { path: 'personal/ingresos/nuevo', element: <PersonalFormPage kind="income" /> },
               { path: 'personal/gastos/nuevo', element: <PersonalFormPage kind="expense" /> },

@@ -60,6 +60,10 @@
   vuelva lo que se borró). Privado por RLS y fuera de los cálculos del hogar. Solo en el menú del modo solo.
   Solo para cuentas autorizadas: `profiles.pockets_enabled` (sin GRANT para la app; se activa por SQL) oculta
   menú y rutas (`PocketsGate`) y políticas RESTRICTIVE de INSERT rechazan crear datos sin él.
+  Importar bitácora (`lib/bitacora.ts`, solo texto pegado por la persona; los `Total:` validan la suma) y
+  compartir la libreta en solo lectura (`receivable_shares`: correo + nombre del botón; política SELECT extra
+  en `receivable_entries` por `auth.jwt() ->> 'email'`; RPC `ledgers_shared_with_me`; ruta `/compartido/:ownerId`
+  y botón en el menú de quien la recibe). Nunca se escriben en el repo datos ni correos reales.
 - Ninguna service key / secret key / password de Postgres en el frontend ni en variables
   `VITE_*`. En el cliente solo va la publishable (anon) key.
 - Tests de RLS con pgTAP en `supabase/tests/database/`. Rápido sin Docker: `npm run test:db`;

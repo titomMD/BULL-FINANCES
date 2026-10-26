@@ -1227,6 +1227,38 @@ export type Database = {
           },
         ]
       }
+      receivable_shares: {
+        Row: {
+          created_at: string
+          id: string
+          label: string
+          user_id: string
+          viewer_email: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label?: string
+          user_id?: string
+          viewer_email: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string
+          user_id?: string
+          viewer_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'receivable_shares_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       debt_payments: {
         Row: {
           account_id: string
@@ -1934,6 +1966,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      ledgers_shared_with_me: {
+        Args: Record<PropertyKey, never>
+        Returns: Array<{ owner_id: string; owner_name: string; label: string }>
+      }
       move_between_pockets: {
         Args: {
           p_amount: number
