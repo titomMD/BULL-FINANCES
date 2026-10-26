@@ -1,15 +1,20 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
-import { GasPumpIcon, TrashIcon } from '@phosphor-icons/react'
+import { GasPumpIcon, ReceiptIcon, TrashIcon } from '@phosphor-icons/react'
 import { useHousehold } from '../../app/household-context'
 import { invalidateData } from '../../hooks/useResource'
 import type { ItemProgress } from '../../lib/calculations/planMonth'
 import { installmentOf } from '../../lib/calculations/plan'
 import { todayBogota, formatDay } from '../../lib/dates'
 import { toUserMessage } from '../../lib/errors'
-import { formatMoney, formatSigned, parseMoneyInput } from '../../lib/money'
+import { parseBill } from '../../lib/billPdf'
+import { formatMoney, formatMoneyInput, formatSigned, parseMoneyInput } from '../../lib/money'
+import { readPdfLines } from '../../lib/pdfLines'
+import { removeFile, uploadFile } from '../../services/debts'
 import { createPlanEntry, deletePlanEntry, markPaid, unmarkPaid } from '../../services/plan'
 import type { PlanCheck } from '../../types/domain'
+import { FilePicker } from '../debts/FilePicker'
+import { StoredFile } from '../debts/StoredFile'
 import { MoneyInput } from '../forms/MoneyInput'
 import { Button } from '../ui/Button'
 import { Field, TextInput } from '../ui/Field'
@@ -77,9 +82,12 @@ export function CheckRow({
   )
 }
 
-/** Línea con tope mensual y registro de gastos (las tanqueadas de la gasolina). */
+/** La gasolina se registra por tanqueadas; lo demás (luz, agua, gas…) por recibos. */
+const isFuel = (name: string) => /gasolina|combustible|tanque/i.test(name)
+
+/** Línea con tope mensual y registro de gastos (tanqueadas de gasolina, recibos de servicios). */
 export function TrackedRow({ progress, month }: { progress: ItemProgress; month: string }) {
-  const { household } = useHousehold()
+  const { household, userId } = useHousehold()
   const toast = useToast()
   const { item } = progress
   const today = todayBogota()
@@ -87,7 +95,24 @@ export function TrackedRow({ progress, month }: { progress: ItemProgress; month:
   const [amount, setAmount] = useState('')
   const [date, setDate] = useState(month === today.slice(0, 7) ? today : `${month}-01`)
   const [note, setNote] = useState('')
+  const [file, setFile] = useState<File | null>(null)
   const [busy, setBusy] = useState(false)
+  const fuel = isFuel(item.name)
+
+  // Un PDF de recibo se lee en tu navegador y sugiere el total; las fotos solo se adjuntan.
+  const pickFile = async (picked: File | null) => {
+    setFile(picked)
+    if (!picked || picked.type !== 'application/pdf') return
+    try {
+      const found = parseBill(await readPdfLines(picked))
+      if (found?.amount && !amount) {
+        setAmount(formatMoneyInput(String(found.amount)))
+        toast.show('Leímos el total del recibo: revísalo antes de guardar')
+      }
+    } catch {
+      // PDF con clave o ilegible: se adjunta igual y el valor se escribe a mano.
+    }
+  }
 
   const add = async () => {
     const value = parseMoneyInput(amount)
@@ -96,22 +121,33 @@ export function TrackedRow({ progress, month }: { progress: ItemProgress; month:
       return
     }
     setBusy(true)
+    let filePath: string | null = null
     try {
-      await createPlanEntry(household.id, item.id, { date, amount: value, note })
+      if (file) filePath = await uploadFile(userId, file)
+      await createPlanEntry(household.id, item.id, {
+        date,
+        amount: value,
+        note,
+        filePath,
+        fileName: file ? file.name.slice(0, 200) : null,
+      })
       invalidateData()
       setAmount('')
       setNote('')
+      setFile(null)
       toast.show('Registrado')
     } catch (error) {
+      if (filePath) await removeFile(filePath).catch(() => {})
       toast.show(toUserMessage(error, 'No pudimos registrarlo.'), 'error')
     } finally {
       setBusy(false)
     }
   }
 
-  const remove = async (id: string) => {
+  const remove = async (id: string, filePath: string | null) => {
     try {
       await deletePlanEntry(id)
+      if (filePath) await removeFile(filePath).catch(() => {})
       invalidateData()
     } catch (error) {
       toast.show(toUserMessage(error), 'error')
@@ -129,6 +165,11 @@ export function TrackedRow({ progress, month }: { progress: ItemProgress; month:
         </Link>
         <span className="shrink-0 tabular font-semibold">{formatMoney(item.amount)}</span>
       </div>
+      {item.dueDay && (
+        <p className="text-sm text-fg-muted">
+          Se paga el día {item.dueDay} · aviso {item.remindDays} días antes
+        </p>
+      )}
       <div
         role="progressbar"
         aria-label={`${item.name}: gastado`}
@@ -168,12 +209,20 @@ export function TrackedRow({ progress, month }: { progress: ItemProgress; month:
               <span className="min-w-0">
                 {formatDay(entry.date)}
                 {entry.note && <span className="text-fg-muted"> · {entry.note}</span>}
+                {entry.filePath && (
+                  <StoredFile
+                    path={entry.filePath}
+                    name={entry.fileName ?? 'recibo'}
+                    alt={`Recibo del ${entry.date}`}
+                    className="mt-1 max-h-48 w-auto max-w-full"
+                  />
+                )}
               </span>
               <span className="flex shrink-0 items-center gap-1">
                 <span className="tabular font-semibold">{formatMoney(entry.amount)}</span>
                 <button
                   type="button"
-                  onClick={() => remove(entry.id)}
+                  onClick={() => remove(entry.id, entry.filePath)}
                   aria-label={`Quitar registro de ${formatMoney(entry.amount)}`}
                   className="grid size-9 place-items-center rounded-lg text-fg-muted hover:bg-surface-2 hover:text-negative"
                 >
@@ -187,9 +236,17 @@ export function TrackedRow({ progress, month }: { progress: ItemProgress; month:
 
       {open ? (
         <div className="mt-3 flex flex-col gap-3 rounded-xl bg-surface-2/50 p-3">
-          <Field label="¿Cuánto fue?">
+          <Field label={fuel ? '¿Cuánto fue?' : '¿Cuánto llegó en el recibo?'}>
             {({ id }) => <MoneyInput id={id} autoFocus value={amount} onChange={setAmount} />}
           </Field>
+          {!fuel && (
+            <FilePicker
+              label="Foto o PDF del recibo (opcional)"
+              file={file}
+              onChange={(picked) => void pickFile(picked)}
+              onError={(message) => toast.show(message, 'error')}
+            />
+          )}
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Fecha">
               {({ id }) => (
@@ -206,7 +263,7 @@ export function TrackedRow({ progress, month }: { progress: ItemProgress; month:
                 <TextInput
                   id={id}
                   maxLength={200}
-                  placeholder="Terpel, 5 galones…"
+                  placeholder={fuel ? 'Terpel, 5 galones…' : 'Mes de octubre, lectura…'}
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                 />
@@ -227,9 +284,15 @@ export function TrackedRow({ progress, month }: { progress: ItemProgress; month:
           variant="secondary"
           className="mt-2"
           onClick={() => setOpen(true)}
-          icon={<GasPumpIcon aria-hidden="true" className="size-4" />}
+          icon={
+            fuel ? (
+              <GasPumpIcon aria-hidden="true" className="size-4" />
+            ) : (
+              <ReceiptIcon aria-hidden="true" className="size-4" />
+            )
+          }
         >
-          Registrar tanqueada
+          {fuel ? 'Registrar tanqueada' : 'Registrar recibo'}
         </Button>
       )}
     </li>

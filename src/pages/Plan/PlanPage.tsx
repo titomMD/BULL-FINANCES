@@ -25,6 +25,7 @@ import { EXAMPLE_PLAN } from '../../lib/planTemplate'
 import { createPlanItems, renamePlanGroup, setTracked } from '../../services/plan'
 import type { PlanItem, PlanKind } from '../../types/domain'
 import { CheckRow, TrackedRow } from '../../components/plan/FixedRow'
+import { UpcomingPayments } from '../../components/plan/UpcomingPayments'
 import { Button, ButtonLink } from '../../components/ui/Button'
 import { Page, PageHeader } from '../../components/ui/PageHeader'
 import { EmptyState, ErrorState, LedgerSkeleton } from '../../components/ui/States'
@@ -211,6 +212,8 @@ export function PlanPage() {
               icon={<CaretRightIcon aria-hidden="true" className="size-4" weight="bold" />}
             />
           </div>
+
+          <UpcomingPayments />
 
           <section aria-labelledby="plan-libre" className="flex flex-col gap-2">
             <h2 id="plan-libre" className="text-fg-muted">

@@ -159,6 +159,21 @@ export const planItemSchema = z
     startMonth: monthField,
     endMonth: monthField,
     tracked: z.boolean().optional(),
+    dueDay: z
+      .string()
+      .trim()
+      .refine(
+        (value) =>
+          value === '' || (/^\d{1,2}$/.test(value) && Number(value) >= 1 && Number(value) <= 31),
+        'Pon un día entre 1 y 31.',
+      ),
+    remindDays: z
+      .string()
+      .trim()
+      .refine(
+        (value) => value === '' || (/^\d{1,2}$/.test(value) && Number(value) <= 30),
+        'Entre 0 y 30 días.',
+      ),
   })
   .refine((value) => !value.startMonth || !value.endMonth || value.endMonth >= value.startMonth, {
     path: ['endMonth'],

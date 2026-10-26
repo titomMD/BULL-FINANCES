@@ -18,6 +18,8 @@ const item = (over: Partial<PlanItem> & Pick<PlanItem, 'kind' | 'name' | 'amount
   endsOn: null,
   sortOrder: seq,
   tracked: false,
+  dueDay: null,
+  remindDays: 3,
   ...over,
 })
 

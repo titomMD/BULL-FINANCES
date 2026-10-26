@@ -11,6 +11,8 @@ const item = (
   endsOn: null,
   sortOrder: 0,
   tracked: false,
+  dueDay: null,
+  remindDays: 3,
   ...over,
 })
 

@@ -186,8 +186,12 @@ export interface PlanItem {
   startsOn: string | null
   endsOn: string | null
   sortOrder: number
-  /** Lleva registros de gasto del mes (p. ej. las tanqueadas de la gasolina). */
+  /** Lleva registros de gasto del mes (p. ej. las tanqueadas de la gasolina o los recibos). */
   tracked: boolean
+  /** Día del mes en que hay que pagar (1-31), o null. */
+  dueDay: number | null
+  /** Cuántos días antes avisar del pago. */
+  remindDays: number
 }
 
 /** «Ya lo pagué este mes»: una marca por línea y mes. */
@@ -207,6 +211,9 @@ export interface PlanEntry {
   date: string
   amount: number
   note: string | null
+  /** Foto o PDF del recibo, en el almacenamiento privado. */
+  filePath: string | null
+  fileName: string | null
 }
 
 /** Tarjeta de crédito o deuda. Solo se guardan los últimos 4 dígitos. */

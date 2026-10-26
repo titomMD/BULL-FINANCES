@@ -23,6 +23,7 @@ import { CardExpenses } from '../../components/debts/CardExpenses'
 import { CardPayments } from '../../components/debts/CardPayments'
 import { DollarBox } from '../../components/debts/DollarBox'
 import { InterestPanel } from '../../components/debts/InterestPanel'
+import { PayMonthPicker } from '../../components/debts/PayMonthPicker'
 import { ButtonLink } from '../../components/ui/Button'
 import { Page, PageHeader } from '../../components/ui/PageHeader'
 import { EmptyState, ErrorState, LedgerSkeleton } from '../../components/ui/States'
@@ -128,6 +129,7 @@ function StatementCard({ statement, accountId }: { statement: DebtStatement; acc
               <Row label="Intereses" value={formatMoney(statement.interest)} />
             )}
           </dl>
+          <PayMonthPicker statementId={statement.id} payMonth={statement.payMonth} />
           <p data-money className="text-sm">
             Pagado {formatMoney(statement.paidAmount)}
             {statement.usdPaid > 0 ? ` y ${formatUsd(statement.usdPaid)}` : ''}
@@ -252,6 +254,7 @@ export function AccountPage() {
                 Extracto del {formatDay(latest.statementDate)} · se paga en{' '}
                 {monthTitle(latest.payMonth)}
               </h2>
+              <PayMonthPicker statementId={latest.id} payMonth={latest.payMonth} />
               <CardPayments statement={latest} accountId={account.id} until={until} />
               <InterestPanel
                 balance={pendingCop}

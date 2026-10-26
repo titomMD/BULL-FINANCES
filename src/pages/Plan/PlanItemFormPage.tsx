@@ -93,8 +93,19 @@ function PlanItemForm({ kind, item }: { kind: PlanKind; item?: PlanItem }) {
           startMonth: item.startsOn?.slice(0, 7) ?? '',
           endMonth: item.endsOn?.slice(0, 7) ?? '',
           tracked: item.tracked,
+          dueDay: item.dueDay ? String(item.dueDay) : '',
+          remindDays: String(item.remindDays),
         }
-      : { name: '', amount: '', groupName: '', startMonth: '', endMonth: '', tracked: false },
+      : {
+          name: '',
+          amount: '',
+          groupName: '',
+          startMonth: '',
+          endMonth: '',
+          tracked: false,
+          dueDay: '',
+          remindDays: '3',
+        },
   })
 
   const onSubmit = handleSubmit(async (values) => {
@@ -105,6 +116,8 @@ function PlanItemForm({ kind, item }: { kind: PlanKind; item?: PlanItem }) {
       startsOn: values.startMonth ? `${values.startMonth}-01` : null,
       endsOn: values.endMonth ? endOfMonth(`${values.endMonth}-01`) : null,
       tracked: kind === 'expense' ? Boolean(values.tracked) : false,
+      dueDay: kind === 'expense' && values.dueDay ? Number(values.dueDay) : null,
+      remindDays: values.remindDays ? Number(values.remindDays) : 3,
     }
     try {
       if (item) await updatePlanItem(item.id, input)
@@ -186,12 +199,50 @@ function PlanItemForm({ kind, item }: { kind: PlanKind; item?: PlanItem }) {
               {...register('tracked')}
             />
             <span className="flex flex-col py-2 leading-tight">
-              <span className="font-medium">Registrar gastos de esta línea</span>
+              <span className="font-medium">Registrar gastos de esta línea (con tope)</span>
               <span className="text-sm text-fg-muted">
-                Para la gasolina: anotas cada tanqueada y se resta del tope del mes.
+                Para gasolina o recibos que cambian cada mes (luz, agua, gas): pones un tope, anotas
+                cada tanqueada o recibo (con foto o PDF si quieres) y se resta del tope.
               </span>
             </span>
           </label>
+        )}
+        {kind === 'expense' && (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field
+              label="Día del mes en que se paga (opcional)"
+              hint="Si lo pones, la app te avisa antes de que venza."
+              error={errors.dueDay?.message}
+            >
+              {({ id, describedBy, invalid }) => (
+                <TextInput
+                  id={id}
+                  inputMode="numeric"
+                  maxLength={2}
+                  placeholder="12"
+                  aria-describedby={describedBy}
+                  aria-invalid={invalid}
+                  {...register('dueDay')}
+                />
+              )}
+            </Field>
+            <Field
+              label="Avisar cuántos días antes"
+              hint="Normalmente 2 o 3."
+              error={errors.remindDays?.message}
+            >
+              {({ id, describedBy, invalid }) => (
+                <TextInput
+                  id={id}
+                  inputMode="numeric"
+                  maxLength={2}
+                  aria-describedby={describedBy}
+                  aria-invalid={invalid}
+                  {...register('remindDays')}
+                />
+              )}
+            </Field>
+          </div>
         )}
         <div className="grid gap-4 sm:grid-cols-2">
           <Field

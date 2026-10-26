@@ -180,6 +180,16 @@ export async function updateStatement(statementId: string, input: StatementInput
   assertOk(await supabase.from('debt_statements').update(statementRow(input)).eq('id', statementId))
 }
 
+/** Cambia con el presupuesto de qué mes se paga el extracto. */
+export async function updateStatementPayMonth(
+  statementId: string,
+  payMonth: string,
+): Promise<void> {
+  assertOk(
+    await supabase.from('debt_statements').update({ pay_month: payMonth }).eq('id', statementId),
+  )
+}
+
 export async function deleteStatement(statementId: string): Promise<void> {
   assertOk(await supabase.from('debt_statements').delete().eq('id', statementId))
 }

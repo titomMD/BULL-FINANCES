@@ -13,6 +13,7 @@ import {
 } from '../../lib/dates'
 import { toUserMessage } from '../../lib/errors'
 import { formatMoney, formatSigned } from '../../lib/money'
+import { UpcomingPayments } from '../../components/plan/UpcomingPayments'
 import { DollarBox } from '../../components/debts/DollarBox'
 import { ButtonLink } from '../../components/ui/Button'
 import { EmptyState, ErrorState, LedgerSkeleton } from '../../components/ui/States'
@@ -82,7 +83,8 @@ export function SoloHome() {
         </p>
       </section>
 
-      <div className="mb-4">
+      <div className="mb-4 flex flex-col gap-4">
+        <UpcomingPayments />
         <DollarBox />
       </div>
       {personal.loading ? (

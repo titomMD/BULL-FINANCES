@@ -1222,6 +1222,8 @@ export type Database = {
       }
       plan_entries: {
         Row: {
+          file_path: string | null
+          file_name: string | null
           amount: number
           entry_date: string
           household_id: string
@@ -1235,6 +1237,8 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          file_path?: string | null
+          file_name?: string | null
           amount: number
           entry_date?: string
           household_id: string
@@ -1248,6 +1252,8 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          file_path?: string | null
+          file_name?: string | null
           amount?: number
           entry_date?: string
           household_id?: string
@@ -1286,6 +1292,8 @@ export type Database = {
       }
       plan_items: {
         Row: {
+          due_day: number | null
+          remind_days: number
           amount: number
           created_at: string
           created_by: string | null
@@ -1304,6 +1312,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          due_day?: number | null
+          remind_days?: number
           amount: number
           created_at?: string
           created_by?: string | null
@@ -1322,6 +1332,8 @@ export type Database = {
           user_id?: string
         }
         Update: {
+          due_day?: number | null
+          remind_days?: number
           amount?: number
           created_at?: string
           created_by?: string | null

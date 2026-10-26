@@ -14,6 +14,8 @@ const item = (over: Partial<PlanItem>): PlanItem => ({
   endsOn: null,
   sortOrder: 0,
   tracked: false,
+  dueDay: null,
+  remindDays: 3,
   ...over,
 })
 
@@ -34,6 +36,8 @@ const entry = (id: string, amount: number, date = '2026-10-05'): PlanEntry => ({
   date,
   amount,
   note: null,
+  filePath: null,
+  fileName: null,
 })
 const statement = (over: Partial<DebtStatement>): DebtStatement => ({
   id: 's',

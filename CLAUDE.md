@@ -46,6 +46,12 @@
   `debt_accounts.fee_plan_item_id`, `plan_checks.paid_amount`), intereses estimados en
   `calculations/cards.ts` (tasa mensual ÷ 30). Dólar del día: `lib/fx.ts` (open.er-api.com y TRM de
   datos.gov.co; la CSP lista ambos en `connect-src`; Google no ofrece API pública).
+  v6 (2026-10-25): recibos variables con tope (líneas `tracked`: luz, agua, gas; foto/PDF adjunto en
+  `plan_entries.file_path`; `lib/billPdf.ts` solo SUGIERE total y fecha de un PDF), día de pago y
+  aviso por línea (`plan_items.due_day`, `remind_days`), `calculations/reminders.ts` (próximos
+  pagos) y calendario `.ics` con alarma. No hay notificaciones push: exigirían service worker y
+  servidor de envíos (cambio de arquitectura pendiente de decidir). El mes de presupuesto de cada
+  extracto se cambia en la página de la tarjeta (`PayMonthPicker`).
 - Ninguna service key / secret key / password de Postgres en el frontend ni en variables
   `VITE_*`. En el cliente solo va la publishable (anon) key.
 - Tests de RLS con pgTAP en `supabase/tests/database/`. Rápido sin Docker: `npm run test:db`;

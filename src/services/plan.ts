@@ -5,7 +5,7 @@ import type { PlanCheck, PlanEntry, PlanItem, PlanKind } from '../types/domain'
 // Plan del mes. RLS solo deja ver y tocar las líneas de quien está conectado.
 
 const PLAN_COLUMNS =
-  'id, kind, name, group_name, amount, currency, starts_on, ends_on, sort_order, tracked'
+  'id, kind, name, group_name, amount, currency, starts_on, ends_on, sort_order, tracked, due_day, remind_days'
 
 export async function fetchMyPlan(householdId: string): Promise<PlanItem[]> {
   const rows = unwrap(
@@ -27,6 +27,8 @@ export async function fetchMyPlan(householdId: string): Promise<PlanItem[]> {
     endsOn: row.ends_on,
     sortOrder: row.sort_order,
     tracked: row.tracked,
+    dueDay: row.due_day,
+    remindDays: row.remind_days,
   }))
 }
 
@@ -40,6 +42,10 @@ export interface PlanItemInput {
   endsOn: string | null
   /** Lleva registro de gastos (tanqueadas). Opcional: por defecto no. */
   tracked?: boolean
+  /** Día del mes en que se paga (1-31) o null. */
+  dueDay?: number | null
+  /** Días de aviso antes del pago. */
+  remindDays?: number
 }
 
 const planRow = (input: PlanItemInput) => ({
@@ -49,6 +55,8 @@ const planRow = (input: PlanItemInput) => ({
   starts_on: input.startsOn,
   ends_on: input.endsOn,
   ...(input.tracked === undefined ? {} : { tracked: input.tracked }),
+  ...(input.dueDay === undefined ? {} : { due_day: input.dueDay }),
+  ...(input.remindDays === undefined ? {} : { remind_days: input.remindDays }),
 })
 
 export async function createPlanItem(
@@ -144,7 +152,7 @@ export async function fetchMyEntries(householdId: string): Promise<PlanEntry[]> 
   const rows = unwrap(
     await supabase
       .from('plan_entries')
-      .select('id, plan_item_id, entry_date, amount, note')
+      .select('id, plan_item_id, entry_date, amount, note, file_path, file_name')
       .eq('household_id', householdId)
       .order('entry_date', { ascending: false })
       .limit(1000),
@@ -155,6 +163,8 @@ export async function fetchMyEntries(householdId: string): Promise<PlanEntry[]> 
     date: row.entry_date,
     amount: row.amount,
     note: row.note,
+    filePath: row.file_path,
+    fileName: row.file_name,
   }))
 }
 
@@ -162,6 +172,8 @@ export interface PlanEntryInput {
   date: string
   amount: number
   note: string
+  filePath?: string | null
+  fileName?: string | null
 }
 
 export async function createPlanEntry(
@@ -176,6 +188,8 @@ export async function createPlanEntry(
       entry_date: input.date,
       amount: input.amount,
       note: input.note.trim() || null,
+      file_path: input.filePath ?? null,
+      file_name: input.fileName ?? null,
     }),
   )
 }
