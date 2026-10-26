@@ -9,7 +9,7 @@ import {
 import { CaretDownIcon, WarningCircleIcon } from '@phosphor-icons/react'
 
 export const controlClasses =
-  'w-full rounded-xl border border-transparent bg-surface-2 px-3.5 text-base text-fg placeholder:text-fg-muted transition-[border-color,box-shadow] duration-150 hover:border-line-strong focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-wash aria-invalid:border-negative disabled:opacity-50'
+  'w-full min-w-0 max-w-full rounded-xl border border-transparent bg-surface-2 px-3.5 text-base text-fg placeholder:text-fg-muted transition-[border-color,box-shadow] duration-150 hover:border-line-strong focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-wash aria-invalid:border-negative disabled:opacity-50'
 
 interface FieldProps {
   label: string
@@ -27,7 +27,7 @@ export function Field({ label, hint, error, children, className = '' }: FieldPro
   const describedBy = [hintId, errorId].filter(Boolean).join(' ') || undefined
 
   return (
-    <div className={`flex flex-col gap-1.5 ${className}`}>
+    <div className={`flex min-w-0 flex-col gap-1.5 ${className}`}>
       <label htmlFor={id} className="text-sm font-medium text-fg">
         {label}
       </label>
