@@ -10,6 +10,7 @@ import {
   KeyIcon,
   BellIcon,
   PaletteIcon,
+  QuestionIcon,
   RepeatIcon,
   SignOutIcon,
   TagIcon,
@@ -488,6 +489,15 @@ export function SettingsPage() {
         }
       >
         <Invitations />
+      </Section>
+
+      <Section title="Ayuda">
+        <LinkRow
+          to="/ayuda"
+          icon={<QuestionIcon />}
+          title="Cómo usar Freyapp"
+          detail="Guía paso a paso y cómo ponerla en tu pantalla de inicio"
+        />
       </Section>
 
       <Section title="Apariencia">

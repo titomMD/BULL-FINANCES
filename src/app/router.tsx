@@ -22,6 +22,7 @@ import { PocketPage } from '../pages/Pockets/PocketPage'
 import { PocketFormPage } from '../pages/Pockets/PocketFormPage'
 import { PocketsGate } from '../pages/Pockets/PocketsGate'
 import { SharedLedgerPage } from '../pages/Mom/SharedLedgerPage'
+import { HelpPage } from '../pages/Help/HelpPage'
 import { MomPage } from '../pages/Mom/MomPage'
 import { DebtsPage } from '../pages/Debts/DebtsPage'
 import { AccountPage } from '../pages/Debts/AccountPage'
@@ -117,6 +118,7 @@ export const router = createBrowserRouter([
               { path: 'personal/:id', element: <PersonalFormPage /> },
               { path: 'reportes', element: <ReportsRoute /> },
               { path: 'reportes/extracto', element: <StatementRoute /> },
+              { path: 'ayuda', element: <HelpPage /> },
               { path: 'ajustes', element: <SettingsPage /> },
               { path: 'ajustes/categorias', element: <CategoriesPage /> },
               { path: 'ajustes/apariencia', element: <AppearancePage /> },
